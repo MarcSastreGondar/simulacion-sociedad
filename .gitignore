@@ -1,0 +1,5 @@
+#Ignoramos el caché de las ejecuciones
+__pycache__/
+
+#No volvemos a subir el venv por pesar demasiado y no ser realmente relevante
+venv/

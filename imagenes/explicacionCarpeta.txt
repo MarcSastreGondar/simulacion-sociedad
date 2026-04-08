@@ -1,0 +1,2 @@
+Carpeta para guardar posibles imágenes que generemos durante la simulación (en caso de que generemos imágenes) que pueda querer utilizar en mi TFG. Las imágenes pueden ser
+cualquier cosa, desde capturas realizadas automáticamente hasta gráficos chulos.

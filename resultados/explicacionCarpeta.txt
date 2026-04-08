@@ -1,0 +1,3 @@
+Carpeta que contendrá los posibles resultados de la ejecución en caso de que sea necesario guardarlos, como podrían ser los agentes entrenados guardados (en caso de que se entrenen,
+también podrían ser simplemente los agentes aunque no estén entrenados, no sé), o cualquier tipo de resultado CSV o cualquier documento que se crea que es relevante guardar
+para poder usarlo en otro contexto (ya sea dentro de este programa [leerlo] o para incluir en la entrega del TFG)
