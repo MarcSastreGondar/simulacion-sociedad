@@ -3,3 +3,6 @@ __pycache__/
 
 #No volvemos a subir el venv por pesar demasiado y no ser realmente relevante
 venv/
+
+#Tampoco subimos el archivo de configuración local del VS Code
+.vscode/

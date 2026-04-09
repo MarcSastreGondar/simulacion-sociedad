@@ -30,14 +30,44 @@ class ModeloSociedad(mesa.Model):
         self.inversores = Inversor.create_agents(self, n_inversores)
         self.rebeldes = Rebelde.create_agents(self, n_rebeldes)        
 
+
         # Agrupamos cada lista de agentes a una lista común
         self.agentes.append(self.trabajadores)
         self.agentes.append(self.inversores)
         self.agentes.append(self.rebeldes)
 
+
+        # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
+        for listaAgentes in self.agentes:                
+            listaAgentes.cell = self.grid.all_cells.select_random_cell()
+
+
+        '''
+        #Contamos todos los tipos de agentes (para comprobar cómo recorrer cada lista y cada agente)
+        trabCount = 0
+        for agente in self.trabajadores:
+            trabCount += 1
+
+        invCount = 0
+        for agente in self.inversores:
+            invCount += 1
+
+        rebCount = 0
+        for agente in self.rebeldes:
+            rebCount += 1
+
+        print(f"Cantidad de trabajadores = {trabCount}; Cantidad de Inversores = {invCount}; Cantidad de rebeldes = {rebCount}")
+
+        todosAgentesCount = 0
         # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
         for listaAgentes in self.agentes:
-            listaAgentes.cell = self.grid.all_cells.select_random_cell()
+            for agente in listaAgentes:                
+                listaAgentes.cell = self.grid.all_cells.select_random_cell()
+                todosAgentesCount += 1
+        print(f"La cantidad de agentes totales es {todosAgentesCount}")
+        '''
+
+
 
     def step(self):
         """Paso de tiempo de toda la simulación"""
