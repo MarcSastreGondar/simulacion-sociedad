@@ -23,7 +23,7 @@ class ModeloSociedad(mesa.Model):
         # Creamos las casillas en las que pueden moverse los agentes
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((anchura, altura), torus=True)  #torus = True para que los bordes del mapa están conectados entre sí
 
-        self.agentes = list()
+        self.agentes = []
 
         # Creamos los agentes de cada tipo
         self.trabajadores = Trabajador.create_agents(self, n_trabajadores)
