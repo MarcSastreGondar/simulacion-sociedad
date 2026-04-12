@@ -7,7 +7,7 @@ from .modelo import ModeloSociedad
 
 # Importamos los distintos tipos de agentes
 from .agentes.trabajador import Trabajador
-from .agentes.inversor import Inversor
+from .agentes.empresario import Empresario
 from .agentes.rebelde import Rebelde
 
 
@@ -15,7 +15,7 @@ from .agentes.rebelde import Rebelde
 __all__ = [
     'ModeloSociedad',
     'Trabajador',
-    'Inversor',
+    'Empresario',
     'Rebelde',
 ]
 

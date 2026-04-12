@@ -7,8 +7,8 @@ gashfd
 from .agente_base import AgenteBase
 
 
-#Creamos la clase del agente Trabajador, que hereda del agente base
-class Inversor(AgenteBase):
+#Creamos la clase del agente Empresario, que hereda del agente base
+class Empresario(AgenteBase):
     """Agente especializado: comportamiento de acumulación/inversión"""
     
     def __init__(self, model, productividad=1.0):

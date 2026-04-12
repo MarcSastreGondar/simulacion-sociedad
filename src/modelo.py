@@ -6,76 +6,80 @@ gashfd
 '''
 
 import mesa
-from mesa import Model
 
-# Imports relativos desde el paquete src (recomendado)
+import pandas as pd
+import numpy as np  #Para el data collector
+
+# Imports de los agentes
 from .agentes.trabajador import Trabajador
-from .agentes.inversor import Inversor
+from .agentes.empresario import Empresario
 from .agentes.rebelde import Rebelde
 
 
-class ModeloSociedad(mesa.Model):
-    """Modelo principal de la simulación"""
+"""Modelo principal de la simulación"""
+class ModeloSociedad(mesa.Model):    
     
-    def __init__(self, n_trabajadores=100, n_inversores=20, n_rebeldes=10, anchura=20, altura=20):
+    def __init__(self, n_trabajadores=100, n_empresarios=20, n_rebeldes=10, anchura=20, altura=20):
         super().__init__()
 
         # Creamos las casillas en las que pueden moverse los agentes
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((anchura, altura), torus=True)  #torus = True para que los bordes del mapa están conectados entre sí
 
-        self.agentes = []
-
         # Creamos los agentes de cada tipo
         self.trabajadores = Trabajador.create_agents(self, n_trabajadores)
-        self.inversores = Inversor.create_agents(self, n_inversores)
+        self.inversores = Empresario.create_agents(self, n_empresarios)
         self.rebeldes = Rebelde.create_agents(self, n_rebeldes)        
 
-
-        # Agrupamos cada lista de agentes a una lista común
-        self.agentes.append(self.trabajadores)
-        self.agentes.append(self.inversores)
-        self.agentes.append(self.rebeldes)
-
-
         # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
-        for listaAgentes in self.agentes:                
-            listaAgentes.cell = self.grid.all_cells.select_random_cell()
+        for agente in self.agents:                
+            agente.cell = self.grid.all_cells.select_random_cell()
+        
 
+
+        #Inicializamos el data collector para que coja los datos durante la ejecución
+        self.datacollector = mesa.DataCollector(
+            #Datos recojidos del modelo en general
+            model_reporters={
+                "Insatisfaccion_Media": lambda m: m.agents.agg("insatisfaccion", np.mean)
+                },
+            
+            #Datos recogidos de cada agente
+            agent_reporters={
+                "Insatisfaccion": "insatisfaccion"
+                }
+        )
 
         '''
-        #Contamos todos los tipos de agentes (para comprobar cómo recorrer cada lista y cada agente)
-        trabCount = 0
-        for agente in self.trabajadores:
-            trabCount += 1
+        ###Eventos, cosas que se ejecutan en un cierto momento
+        # Ejecutar un evento 1 sola vez en una cierta cantidad de tiempo
+        self.schedule_event(nomMetodo, at=25.0)     # At absolute time
+        self.schedule_event(nomMetodo, after=5.0)   # Relative to now
 
-        invCount = 0
-        for agente in self.inversores:
-            invCount += 1
+        # Cancelar un evento de 1 sola vez
+        event = self.schedule_event(callback, at=100.0) #No sé qué es callback jaja
+        event.cancel()
 
-        rebCount = 0
-        for agente in self.rebeldes:
-            rebCount += 1
+        #Para programar eventos que se realicen reiteradamente
+        from mesa.time import Schedule
 
-        print(f"Cantidad de trabajadores = {trabCount}; Cantidad de Inversores = {invCount}; Cantidad de rebeldes = {rebCount}")
+        self.schedule_recurring(nomMetodo, Schedule(interval=10))            # Every 10 time units
+        self.schedule_recurring(nomMetodo, Schedule(interval=10, start=0))   # Every 10 time units starting immediately
+        self.schedule_recurring(nomMetodo, Schedule(interval=1.0, count=10)) # Every 10 time units limited to 10 executions
 
-        todosAgentesCount = 0
-        # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
-        for listaAgentes in self.agentes:
-            for agente in listaAgentes:                
-                listaAgentes.cell = self.grid.all_cells.select_random_cell()
-                todosAgentesCount += 1
-        print(f"La cantidad de agentes totales es {todosAgentesCount}")
+        # Cancelar un evento reiterado
+        gen = self.schedule_recurring(nomMetodo, Schedule(interval=5.0))
+        gen.stop()
         '''
 
 
-
-    def step(self):
-        """Paso de tiempo de toda la simulación"""
+    """Paso de tiempo de toda la simulación"""
+    def step(self):        
 
         # Ejecutamos el step() de todos los agentes en orden aleatorio.
-        for listaAgentes in self.agentes:
-            listaAgentes.shuffle_do("step")
+        self.agents.shuffle_do("step")
 
+        #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
+        self.datacollector.collect(self)
         
         
         #r325tr32t3"$!$·/y5764 4675346325 1212  Aquí puedes añadir lógica global # - Calcular Gini - Calcular grievance medio - Detectar si hay revueltas activas - Aplicar posibles redistribuciones, etc.
