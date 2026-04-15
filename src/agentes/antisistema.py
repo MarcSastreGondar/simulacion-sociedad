@@ -7,7 +7,7 @@ gashfd
 from .agente_base import AgenteBase
 
 #Creamos la clase del agente Trabajador, que hereda del agente base
-class Rebelde(AgenteBase):
+class Antisistema(AgenteBase):
     """Agente especializado: comportamiento relacionado con grievance y revueltas"""
     
     def __init__(self, model, productividad=1.0):

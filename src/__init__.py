@@ -8,15 +8,15 @@ from .modelo import ModeloSociedad
 # Importamos los distintos tipos de agentes
 from .agentes.trabajador import Trabajador
 from .agentes.empresario import Empresario
-from .agentes.rebelde import Rebelde
+from .agentes.antisistema import Antisistema
 
 
 # En caso de querer exportar todo
 __all__ = [
     'ModeloSociedad',
+    'Antisistema',
+    'Empresario',    
     'Trabajador',
-    'Empresario',
-    'Rebelde',
 ]
 
 

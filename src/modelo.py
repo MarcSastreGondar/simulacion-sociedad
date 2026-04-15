@@ -7,36 +7,43 @@ gashfd
 
 import mesa
 
+######asfasf 3325235 q35??      CREO que esto va en el simulacionSociedad.ipynb
 import pandas as pd
 import numpy as np  #Para el data collector
 
 # Imports de los agentes
 from .agentes.trabajador import Trabajador
 from .agentes.empresario import Empresario
-from .agentes.rebelde import Rebelde
+from .agentes.antisistema import Antisistema
+
+#Imports de funciones de Python
+import random
 
 
 """Modelo principal de la simulación"""
 class ModeloSociedad(mesa.Model):    
     
-    def __init__(self, n_trabajadores=100, n_empresarios=20, n_rebeldes=10, anchura=20, altura=20):
-        super().__init__()
+    def __init__(self, n_trabajadores=100, n_empresarios=20, n_rebeldes=10, anchura=20, altura=20, seed=150):
 
+        super().__init__(rng=seed)
+        
         # Creamos las casillas en las que pueden moverse los agentes
-        self.grid = mesa.discrete_space.OrthogonalMooreGrid((anchura, altura), torus=True)  #torus = True para que los bordes del mapa están conectados entre sí
+        self.grid = mesa.discrete_space.OrthogonalMooreGrid((anchura, altura), torus=True, random=self.random)  #torus = True para que los bordes del mapa están conectados entre sí
 
         # Creamos los agentes de cada tipo
         self.trabajadores = Trabajador.create_agents(self, n_trabajadores)
-        self.inversores = Empresario.create_agents(self, n_empresarios)
-        self.rebeldes = Rebelde.create_agents(self, n_rebeldes)        
+        self.empresarios = Empresario.create_agents(self, n_empresarios)
+        self.antisistemas = Antisistema.create_agents(self, n_rebeldes)        
 
         # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
         for agente in self.agents:                
-            agente.cell = self.grid.all_cells.select_random_cell()
+            agente.cell = self.grid.all_cells.select_random_cell()#self.random)
         
+        print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
 
 
-        #Inicializamos el data collector para que coja los datos durante la ejecución
+
+        #Inicializamos el data collector para que recoja los datos durante la ejecución
         self.datacollector = mesa.DataCollector(
             #Datos recojidos del modelo en general
             model_reporters={
