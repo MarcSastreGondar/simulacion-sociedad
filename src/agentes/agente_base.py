@@ -13,16 +13,17 @@ class AgenteBase(mesa.Agent):
     def __init__(self, model):
         super().__init__(model)
 
-        # Atributos que tienen todos los agentes
+        # Definimos los atributos que tienen todos los agentes
 
         self.dinero = 0.0               #Cantidad de dinero que posee un agente en un cierto momento
         self.insatisfaccion = 0.0       #Grado de desagrado por la situación en la que se encuentra el agente. Entre 0 (mínimo) y 100 (máximo)
 
         #Variables relacionadas con el tiempo del que dispone el agente para actuar cada día
-        self.tiempoPosible = 24                         #Tiempo en horas que el agente tiene disponibles en un dia
-        self.tiempoDisponible = self.tiempoPosible      #Tiempo que le queda aún disponible al agente para realizar acciones
+        self.tiempoMaxPosible = 24                                          #Tiempo en horas que el agente tiene disponibles en un dia
+        self.tiempoVital = 3                                                #Tiempo que se utiliza en hacer acciones necesarias para la supervivencia (comida, higiene, etc.)
+        self.tiempoDisponible = self.tiempoMaxPosible - self.tiempoVital    #Tiempo que aún le queda disponible al agente para realizar acciones
 
-        self.energia = 100          #Energia para realizar acciones
+        self.energia = 100                                 #Energia, la cual es necesaria para realizar acciones
 
 
         

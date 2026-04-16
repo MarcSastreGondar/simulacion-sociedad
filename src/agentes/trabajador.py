@@ -7,15 +7,16 @@ gashfd
 from .agente_base import AgenteBase
 
 
-#Creamos la clase del agente Trabajador, que hereda del agente base
+#Agente Trabajador, cuyo comportamiento se basa en asistir siempre al trabajo y ser relativamente obediente
 class Trabajador(AgenteBase):
-    """Agente especializado: comportamiento de producción/recolecta"""
+        
     
-    def __init__(self, model, productividad=1.0):
-        super().__init__(model)           # Llama al __init__ de BaseAgent
-        self.productividad = productividad
-        # Puedes añadir más atributos específicos aquí
+    def __init__(self, modelo, tiempoTrabajo=8, maxTiempoAlTrabajo=1.5):
+        
+        # Llamamos al __init__ de BaseAgent
+        super().__init__(modelo)
+        self.tiempoTrabajo = tiempoTrabajo + 
+       
 
-    def step(self):
-        # Aquí va la lógica específica del trabajador
+    def step(self):        
         pass

@@ -23,7 +23,7 @@ import random
 """Modelo principal de la simulación"""
 class ModeloSociedad(mesa.Model):    
     
-    def __init__(self, n_trabajadores=100, n_empresarios=20, n_rebeldes=10, anchura=20, altura=20, seed=150):
+    def __init__(self, n_trabajadores=100, n_empresarios=20, n_rebeldes=10, anchura=20, altura=20, seed=150, tiempoTrabajo=8, maxTiempoAlTrabajo=1.5):
 
         super().__init__(rng=seed)
         
@@ -31,7 +31,8 @@ class ModeloSociedad(mesa.Model):
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((anchura, altura), torus=True, random=self.random)  #torus = True para que los bordes del mapa están conectados entre sí
 
         # Creamos los agentes de cada tipo
-        self.trabajadores = Trabajador.create_agents(self, n_trabajadores)
+        self.rng.rasf
+        self.trabajadores = Trabajador.create_agents(self, n_trabajadores, tiempoTrabajo, tiempoAlTrabajo)
         self.empresarios = Empresario.create_agents(self, n_empresarios)
         self.antisistemas = Antisistema.create_agents(self, n_rebeldes)        
 

@@ -7,14 +7,15 @@ gashfd
 from .agente_base import AgenteBase
 
 
-#Creamos la clase del agente Empresario, que hereda del agente base
+#Agente Empresario, cuyo comportamiento se basa en acumular dinero y dar trabajo a los demás
 class Empresario(AgenteBase):
-    """Agente especializado: comportamiento de acumulación/inversión"""
     
     def __init__(self, model, productividad=1.0):
-        super().__init__(model)           # Llama al __init__ de BaseAgent
+        
+        # Llamamos al __init__ de BaseAgent
+        super().__init__(model)
         self.productividad = productividad
-        # Puedes añadir más atributos específicos aquí
+
 
     def step(self):
         pass
