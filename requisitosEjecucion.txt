@@ -22,13 +22,11 @@ source venv/bin/activate
 3. Actualizar pip a la versión más reciente
 python -m pip install --upgrade pip
 
-4. Instalar todas las librerías necesarias
-pip install mesa numpy pandas matplotlib seaborn solara tqdm
+# 4. Instalar todas las librerías necesarias
+pip install mesa>=3.5.0 numpy pandas matplotlib seaborn solara tqdm networkx altair ipywidgets
+pip install "starlette<0.46" --force-reinstall
 
-5. Instalar versiones específicas estables
-pip install mesa>=3.5.0 numpy pandas matplotlib seaborn solara tqdm networkx
-
-6. Verificar que todas las librerías se instalaron correctamente
+5. Verificar que todas las librerías se instalaron correctamente
 pip list
 
 
