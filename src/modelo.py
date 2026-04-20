@@ -68,28 +68,6 @@ class ModeloSociedad(mesa.Model):
                 }
         )
 
-        '''
-        ###Eventos, cosas que se ejecutan en un cierto momento
-        # Ejecutar un evento 1 sola vez en una cierta cantidad de tiempo
-        self.schedule_event(nomMetodo, at=25.0)     # At absolute time
-        self.schedule_event(nomMetodo, after=5.0)   # Relative to now
-
-        # Cancelar un evento de 1 sola vez
-        event = self.schedule_event(callback, at=100.0) #No sé qué es callback jaja
-        event.cancel()
-
-        #Para programar eventos que se realicen reiteradamente
-        from mesa.time import Schedule
-
-        self.schedule_recurring(nomMetodo, Schedule(interval=10))            # Every 10 time units
-        self.schedule_recurring(nomMetodo, Schedule(interval=10, start=0))   # Every 10 time units starting immediately
-        self.schedule_recurring(nomMetodo, Schedule(interval=1.0, count=10)) # Every 10 time units limited to 10 executions
-
-        # Cancelar un evento reiterado
-        gen = self.schedule_recurring(nomMetodo, Schedule(interval=5.0))
-        gen.stop()
-        '''
-
 
     """Paso de tiempo de toda la simulación"""
     def step(self):        

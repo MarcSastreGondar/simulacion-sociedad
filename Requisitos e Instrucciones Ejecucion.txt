@@ -16,14 +16,14 @@ python -m venv venv
 #    Windows:
 venv\Scripts\activate
 
-#    macOS / Linux:
+#    Linux / macOS:
 source venv/bin/activate
 
 3. Actualizar pip a la versión más reciente
 python -m pip install --upgrade pip
 
-# 4. Instalar todas las librerías necesarias
-pip install mesa>=3.5.0 numpy pandas matplotlib seaborn solara tqdm networkx altair ipywidgets
+4. Instalar todas las librerías necesarias
+pip install "mesa[rec]" numpy pandas matplotlib seaborn solara tqdm ipywidgets jupyterlab
 pip install "starlette<0.46" --force-reinstall
 
 5. Verificar que todas las librerías se instalaron correctamente
@@ -31,11 +31,15 @@ pip list
 
 
 
-Cómo usar este entorno después de crearlo:
-1. Elegirlo como intérprete de Python en el Visual Studio Code. 
-    1.1 Pulsar Ctrl + Shift + P,.
-    1.2 Escribir "Python: Select Interpreter".
-    1.3 Seleccionar la opción que tenga el venv que hemos instalado.
+Cómo usar este entorno después de crearlo y cómo ejecutar:
+1. Activar el venv
+venv\Scripts\activate     # Windows
+source venv/bin/activate  # Linux / macOS:
 
-2. Dentro del archivo simulacionSociedad.ipynb, pulsar el botón que pone "Select Kernel" localizado arriba a la derecha, elegir la opción "Python Environments..." y seleccionar el venv que 
-acabamos de crear, que probablemente tendrá asociado un icono de una estrella.
+2. Ejecutar Jupyter Lab
+jupyter lab
+
+3. En el Jupyter Lab:
+    3.1 Abrir el archivo notebooks/simulacionSociedad.ipynb
+    3.2 Pulsar el botón de "Restart the kernel and run all cells" (en caso de querer volver a ejecutar el archivo entero)
+    3.3 En el apartado de visualización, usar la interfaz gráfica del Cell Output para realizar la ejecución que se quiera.
