@@ -52,7 +52,7 @@ class ModeloSociedad(mesa.Model):
             agente.cell = self.grid.all_cells.select_random_cell()            
         
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
-        self.agents.do("printCaracteristicas")
+        #self.agents.do("printCaracteristicas")
         
 
         #Inicializamos el data collector para que recoja los datos durante la ejecución

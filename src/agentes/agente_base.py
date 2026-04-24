@@ -9,13 +9,15 @@ import mesa
 class AgenteBase(mesa.Agent):
     """Clase base que contiene atributos y métodos comunes a todos los agentes."""
 
-    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, dineroInicial=500, insatisfaccionInicial=15):
+    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, dineroInicial=500, insatisfaccionInicial=15.0):
         super().__init__(modelo)
 
         # Definimos los atributos comunes entre todos los agentes
         #Usamos el mismo RandomNumberGenerator que tiene el modelo
         self.aleat = modelo.rng
         
+        self.tipo = "Ninguno"
+
         #Variables relacionadas con el tiempo del que dispone el agente para actuar cada día
         self.tiempoMaxPosible = tiempoMaxPosible - tiempoVital                                          #Tiempo en horas que el agente tiene disponibles en un dia
         self.tiempoDisponible = self.tiempoMaxPosible                                                   #Tiempo que aún le queda disponible al agente para realizar acciones
@@ -41,7 +43,7 @@ class AgenteBase(mesa.Agent):
 
 
     def printCaracteristicas(self):
-        print(f"Tiempo máximo posible = {self.tiempoMaxPosible}. Dinero inicial = {self.dinero}. Insatisfacción inicial = {self.insatisfaccion}.")
+        print(f"Tipo del agente = {self.tipo}. Tiempo máximo posible = {self.tiempoMaxPosible}. Dinero inicial = {self.dinero}. Insatisfacción inicial = {self.insatisfaccion}.")
 
 
     def step(self):

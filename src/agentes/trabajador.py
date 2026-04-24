@@ -17,7 +17,8 @@ class Trabajador(AgenteBase):
         # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
         super().__init__(modelo, tiempoMaxPosible, tiempoVital, energiaInicial, porcentajeAleatorio, dineroInicial, insatisfaccionInicial)
 
-
+        self.tipo = "Trabajador"
+        
         #Obtenemos la cantidad de tiempo que pasa trabajando el agente
         self.tiempoTrabajo = tiempoTrabajo + self.aleat.uniform(0.25, maxTiempoAlTrabajo)     #Añadimos aleatoriedad en la cantidad de tiempo que necesita un agente para ir y volver del trabajo (entre 20 minutos y el tiempo introducido)
         self.tiempoTrabajo = redondearMediaHora(self.tiempoTrabajo)

@@ -16,7 +16,7 @@ class Antisistema(AgenteBase):
         # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
         super().__init__(modelo, tiempoMaxPosible, tiempoVital, energiaInicial, porcentajeAleatorio, dineroInicial, insatisfaccionInicial)
         
-        
+        self.tipo = "Antisistema"
 
     def step(self):
         pass
