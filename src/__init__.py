@@ -3,12 +3,15 @@ Archivo para facilitar los imports del src desde el '.ipynb'.
 '''
 
 # Importamos el modelo principal
-from .modelo import ModeloSociedad
+from .modeloSociedad import ModeloSociedad
 
 # Importamos los distintos tipos de agentes
 from .agentes.trabajador import Trabajador
 from .agentes.empresario import Empresario
 from .agentes.antisistema import Antisistema
+
+# Importamos el método para instanciar toda la visualización
+from .visualizacion import crear_visualizacion
 
 
 # En caso de querer exportar todo

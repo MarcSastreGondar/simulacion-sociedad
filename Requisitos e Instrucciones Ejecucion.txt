@@ -5,7 +5,7 @@ Probablemente debería poner también mi versión de Python que he usado en la r
 Este proyecto se ha ejecutando usando Visual Studio Code, por ende, no se garantiza el funcionamiento correcto de la aplicación al ejecutarlo desde cualquier otra aplicación.
 
 Prerrequisitos:
--Tener Python ya instalado
+1.Tener Python ya instalado con la versión 3.12.10 (no se garantiza el funcionamiento correcto en otras versiones)
 
 
 Todos los comandos necesarios para crear y configurar el entorno virtual. Ejecutarlos en orden:
@@ -23,7 +23,7 @@ source venv/bin/activate
 python -m pip install --upgrade pip
 
 4. Instalar todas las librerías necesarias
-pip install "mesa[rec]" numpy pandas matplotlib seaborn solara tqdm ipywidgets jupyterlab
+pip install "mesa[rec]" numpy pandas matplotlib seaborn solara tqdm ipywidgets #jupyterlab
 pip install "starlette<0.46" --force-reinstall
 
 5. Verificar que todas las librerías se instalaron correctamente
@@ -43,3 +43,9 @@ jupyter lab
     3.1 Abrir el archivo notebooks/simulacionSociedad.ipynb
     3.2 Pulsar el botón de "Restart the kernel and run all cells" (en caso de querer volver a ejecutar el archivo entero)
     3.3 En el apartado de visualización, usar la interfaz gráfica del Cell Output para realizar la ejecución que se quiera.
+
+
+Puede ser necesario seleccionar la versión 3.12.10 como Intérprete de Python en VS Code:
+    1. Ctrl + Shift + P
+    2. Seleccionar "Python: Select Interpreter"
+    3. Seleccionar el venv que hemos creado    

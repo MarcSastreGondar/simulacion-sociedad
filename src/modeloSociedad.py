@@ -49,7 +49,7 @@ class ModeloSociedad(mesa.Model):
 
         # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
         for agente in self.agents:                
-            agente.cell = self.grid.all_cells.select_random_cell()            
+            agente.cell = self.grid.all_cells.select_random_cell()     
         
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
         #self.agents.do("printCaracteristicas")
