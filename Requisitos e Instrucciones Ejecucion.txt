@@ -23,7 +23,7 @@ source venv/bin/activate
 python -m pip install --upgrade pip
 
 4. Instalar todas las librerías necesarias
-pip install "mesa[rec]" numpy pandas matplotlib seaborn solara tqdm ipywidgets #jupyterlab
+pip install "mesa[rec]" numpy pandas matplotlib seaborn solara tqdm ipywidgets
 pip install "starlette<0.46" --force-reinstall
 
 5. Verificar que todas las librerías se instalaron correctamente
@@ -36,13 +36,11 @@ Cómo usar este entorno después de crearlo y cómo ejecutar:
 venv\Scripts\activate     # Windows
 source venv/bin/activate  # Linux / macOS:
 
-2. Ejecutar Jupyter Lab
-jupyter lab
-
-3. En el Jupyter Lab:
-    3.1 Abrir el archivo notebooks/simulacionSociedad.ipynb
-    3.2 Pulsar el botón de "Restart the kernel and run all cells" (en caso de querer volver a ejecutar el archivo entero)
-    3.3 En el apartado de visualización, usar la interfaz gráfica del Cell Output para realizar la ejecución que se quiera.
+2. En el notebooks/simulacionSociedad.ipynb:
+    2.1 Abrir el archivo
+    2.2 Pulsar el botón de "Select Kernel" y elegir el venv que hemos creado
+    2.3 Pulsar el botón de "Restart Kernel" y darle al botón de "Run All"
+    2.3 En el apartado de visualización, usar la interfaz gráfica del Cell Output para realizar la ejecución que se quiera.
 
 
 Puede ser necesario seleccionar la versión 3.12.10 como Intérprete de Python en VS Code:
