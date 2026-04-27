@@ -6,3 +6,7 @@ venv/
 
 #Tampoco subimos el archivo de configuración local del VS Code
 .vscode/
+
+############BORRAR!!!!!!!!!!!!###########################3
+#No subimos la carpeta experimental de ejemplo
+EjemploMesa/
