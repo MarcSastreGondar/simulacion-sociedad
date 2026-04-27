@@ -54,19 +54,24 @@ class ModeloSociedad(mesa.Model):
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
         #self.agents.do("printCaracteristicas")
         
-
+        
         #Inicializamos el data collector para que recoja los datos durante la ejecución
-        self.datacollector = mesa.DataCollector(
-            #Datos recojidos del modelo en general
-            model_reporters={
-                "Insatisfaccion_Media": lambda m: m.agents.agg("insatisfaccion", np.mean)
-                },
+        #Datos recogidos del modelo en general
+        model_reporters={
+            "Insatisfaccion_Media": lambda m: m.agents.agg("insatisfaccion", np.mean)
+        }
             
-            #Datos recogidos de cada agente
-            agent_reporters={
-                "Insatisfaccion": "insatisfaccion"
-                }
-        )
+        #Datos recogidos de cada agente
+        agent_reporters={
+            "Insatisfaccion": "insatisfaccion"
+        }
+
+        #Lo inicializamos
+        self.datacollector = mesa.DataCollector(model_reporters=model_reporters, agent_reporters=agent_reporters)
+
+
+        self.running = True
+        self.datacollector.collect(self)
 
 
     """Paso de tiempo de toda la simulación"""

@@ -9,6 +9,7 @@ from mesa.visualization import (
     make_plot_component,    
 )
 from mesa.visualization.components import AgentPortrayalStyle
+from mesa.visualization.components import PropertyLayerStyle
 
 def agent_portrayal(agent):
     # Determinamos color y tamaño según el tipo
@@ -24,17 +25,32 @@ def agent_portrayal(agent):
         color = "#d62728"
         size = 60
     else:
-        color = "gray"
+        color = "#000000"
         size = 30
 
+    size=200
+    portrayal = AgentPortrayalStyle(color="blue", marker="^",size=200,x=agent.pos[0], y=agent.pos[1])
+    portrayal.update("color", color)
+    return portrayal
+    
     return AgentPortrayalStyle(
         color=color,
         size=size,
-        marker="o",
-        zorder=10 if agent.tipo == "Antisistema" else 5
+        #marker="o",
+        #zorder=10 if agent.tipo == "Antisistema" else 5
     )
 
 
+#Función para quitar los bordes del gráfico de los agentes
+def post_process(ax):
+    ax.set_aspect("equal")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.get_figure().set_size_inches(15, 15)
+
+
+def propertylayer_portrayal(layer):
+    return PropertyLayerStyle(color="lightblue", alpha=0.8, colorbar=False)
 
 def crear_visualizacion(modeloSociedad, parametrosModelo):
     """
@@ -42,17 +58,20 @@ def crear_visualizacion(modeloSociedad, parametrosModelo):
     model_params: Diccionario con Sliders y valores fijos.
     """
     # Componentes
-    renderizador = SpaceRenderer(modeloSociedad, backend="matplotlib").setup_agents(agent_portrayal=agent_portrayal)
+    renderizador = SpaceRenderer(modeloSociedad, backend="matplotlib",).setup_agents(agent_portrayal)  
     renderizador.draw_agents()
 
-    grafico = make_plot_component("Insatisfaccion_Media")
-    grafico2 = make_plot_component("Insatisfaccion_Media")
+    #Quitamos la leyenda del gráfico con los agentes
+    renderizador.post_process = post_process
+
+    renderizador.render()
+    graficoInsatisfaccionMedia = make_plot_component("Insatisfaccion_Media")
 
     #Devolvemos la página
     return SolaraViz(
-    model=modeloSociedad,
-    renderer=renderizador,
-    model_params=parametrosModelo,
-    components=[grafico,grafico2],
-    name="Simulación Sociedad"
+        modeloSociedad,
+        renderizador,
+        components=[graficoInsatisfaccionMedia],
+        model_params=parametrosModelo,
+        name="Simulación Sociedad"
 )

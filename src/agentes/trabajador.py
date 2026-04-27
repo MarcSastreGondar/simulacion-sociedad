@@ -6,6 +6,7 @@ gashfd
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
 from .agente_base import AgenteBase
 from ..metricas import *
+import mesa
 
 
 #Agente Trabajador, cuyo comportamiento se basa en asistir siempre al trabajo y ser relativamente obediente
@@ -29,4 +30,4 @@ class Trabajador(AgenteBase):
 
 
     def step(self):        
-        pass
+        self.move_to(self.random.choice(self.cell.get_neighborhood()))
