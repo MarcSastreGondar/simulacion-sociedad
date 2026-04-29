@@ -22,7 +22,7 @@ from .agentes.antisistema import Antisistema
 class ModeloSociedad(mesa.Model):    
     
     def __init__(self, n_trabajadores=100, n_empresarios=20, n_rebeldes=10, anchuraGrid=20, alturaGrid=20, seed=150,                        #Parámetros del modelo
-                 tiempoMaxPosible=24, tiempoVital=3, energia=100, porcentajeAleatorio=0.2,     #Parámetros de los agentes en general
+                 tiempoMaxPosible=24, tiempoVital=3, energia=100, porcentajeAleatorio=0.2, visionAgente=3,     #Parámetros de los agentes en general
                  dineroInicialT=500, insatisfaccionInicialT=15, tiempoTrabajo=8, maxTiempoAlTrabajo=1.5,                                                                                    #Parámetros de los Trabajadores
                  dineroInicialE=15000, insatisfaccionInicialE=0,
                  dineroInicialA=50, insatisfaccionInicialA=50):
@@ -35,22 +35,30 @@ class ModeloSociedad(mesa.Model):
 
         # Creamos los agentes de cada tipo
         self.trabajadores = Trabajador.create_agents(self, n_trabajadores, 
-                                                     tiempoMaxPosible, tiempoVital, energia, porcentajeAleatorio,
+                                                     tiempoMaxPosible, tiempoVital, energia, porcentajeAleatorio, visionAgente,
                                                      dineroInicialT, insatisfaccionInicialT, tiempoTrabajo, maxTiempoAlTrabajo)
         
         self.empresarios = Empresario.create_agents(self, n_empresarios,
-                                                    tiempoMaxPosible, tiempoVital, energia, porcentajeAleatorio,
+                                                    tiempoMaxPosible, tiempoVital, energia, porcentajeAleatorio, visionAgente,
                                                     dineroInicialE, insatisfaccionInicialE)
         
         self.antisistemas = Antisistema.create_agents(self, n_rebeldes,
-                                                      tiempoMaxPosible, tiempoVital, energia, porcentajeAleatorio,
+                                                      tiempoMaxPosible, tiempoVital, energia, porcentajeAleatorio, visionAgente,
                                                       dineroInicialA, insatisfaccionInicialA)        
 
 
         # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
         for agente in self.agents:                
-            agente.cell = self.grid.all_cells.select_random_cell()     
+            agente.cell = self.grid.all_cells.select_random_cell()
         
+
+        #TEMP!!!! Hacemos algunos step de cada agente para verificar que funcionan correctamente. De esta manera, nos saltará un error detallado al
+        #ejecutar (en el gráfico de Solara los errores no son nada descriptivos o ni aparecen)
+        self.agents.shuffle_do("step")
+        self.agents.shuffle_do("step")
+        self.agents.shuffle_do("step")
+
+
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
         #self.agents.do("printCaracteristicas")
         

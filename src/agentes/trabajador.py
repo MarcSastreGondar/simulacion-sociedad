@@ -13,12 +13,12 @@ import mesa
 class Trabajador(AgenteBase):
         
     
-    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, dineroInicial=500, insatisfaccionInicial=15.0, tiempoTrabajo=8, maxTiempoAlTrabajo=1.5):
+    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, visionAgente=3, dineroInicial=500, insatisfaccionInicial=15.0, tiempoTrabajo=8, maxTiempoAlTrabajo=1.5):
         
         # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
-        super().__init__(modelo, tiempoMaxPosible, tiempoVital, energiaInicial, porcentajeAleatorio, dineroInicial, insatisfaccionInicial)
+        super().__init__(modelo, tiempoMaxPosible, tiempoVital, energiaInicial, porcentajeAleatorio, visionAgente, dineroInicial, insatisfaccionInicial)
 
-        self.tipo = "Trabajador"
+        self.tipo = "Trabajador"            
         
         #Obtenemos la cantidad de tiempo que pasa trabajando el agente
         self.tiempoTrabajo = tiempoTrabajo + self.aleat.uniform(0.25, maxTiempoAlTrabajo)     #Añadimos aleatoriedad en la cantidad de tiempo que necesita un agente para ir y volver del trabajo (entre 20 minutos y el tiempo introducido)
@@ -29,5 +29,8 @@ class Trabajador(AgenteBase):
         self.tiempoDisponible = self.tiempoMaxPosible
 
 
-    def step(self):        
-        self.move_to(self.random.choice(self.cell.get_neighborhood()))
+    def step(self):
+        '''Definimos las acciones que tomarán los trabajadores'''
+        self.actualizar_vecinos()
+        self.move()
+        

@@ -6,10 +6,10 @@ gashfd
 #Importamos la clase con el agente por defecto de Mesa
 import mesa
 
-class AgenteBase(mesa.Agent):
+class AgenteBase(mesa.discrete_space.CellAgent):
     """Clase base que contiene atributos y métodos comunes a todos los agentes."""
 
-    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, dineroInicial=500, insatisfaccionInicial=15.0):
+    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, visionAgente=3, dineroInicial=500, insatisfaccionInicial=15.0):
         super().__init__(modelo)
 
         # Definimos los atributos comunes entre todos los agentes
@@ -17,6 +17,8 @@ class AgenteBase(mesa.Agent):
         self.aleat = modelo.rng
         
         self.tipo = "Ninguno"
+
+        self.visionAgente = visionAgente
 
         #Variables relacionadas con el tiempo del que dispone el agente para actuar cada día
         self.tiempoMaxPosible = tiempoMaxPosible - tiempoVital                                          #Tiempo en horas que el agente tiene disponibles en un dia
@@ -40,6 +42,22 @@ class AgenteBase(mesa.Agent):
 
         if(self.insatisfaccion > 100.0):    #Aseguramos de que no sobrepase el máximo
             self.insatisfaccion = 100.0
+
+
+    def actualizar_vecinos(self):
+        """
+        Look around and see who my vecinos are
+        """
+        self.vecindario = self.cell.get_neighborhood(radius=self.visionAgente)
+        #print(self.vecindario)
+        self.vecinos = self.vecindario.agents
+        self.casillasVacias = [c for c in self.vecindario if c.is_empty]
+
+    def move(self):
+        """Move to a random empty neighboring cell if movement is enabled."""
+        if self.casillasVacias:
+            nuevaPosicion = self.random.choice(self.casillasVacias)
+            self.move_to(nuevaPosicion)
 
 
     def printCaracteristicas(self):
