@@ -9,7 +9,7 @@ import mesa
 class AgenteBase(mesa.discrete_space.CellAgent):
     """Clase base que contiene atributos y métodos comunes a todos los agentes."""
 
-    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, visionAgente=3, dineroInicial=500, insatisfaccionInicial=15.0):
+    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, visionAgente=3, movimientoAgente=1, dineroInicial=500, insatisfaccionInicial=15.0):
         super().__init__(modelo)
 
         # Definimos los atributos comunes entre todos los agentes
@@ -19,6 +19,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.tipo = "Ninguno"
 
         self.visionAgente = visionAgente
+        self.visionMovimiento = movimientoAgente
 
         #Variables relacionadas con el tiempo del que dispone el agente para actuar cada día
         self.tiempoMaxPosible = tiempoMaxPosible - tiempoVital                                          #Tiempo en horas que el agente tiene disponibles en un dia
@@ -36,7 +37,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         #Grado de desagrado por la situación en la que se encuentra el agente. Entre 0 (mínimo) y 100 (máximo)
         insatisfaccionAleat = porcentajeAleatorio * insatisfaccionInicial
-        insatisfaccionAleat = int(self.aleat.uniform(0 , insatisfaccionAleat))  #- un porcentaje del que tiene inicialmente
+        insatisfaccionAleat = int(self.aleat.uniform(0, insatisfaccionAleat))  #- un porcentaje del que tiene inicialmente
 
         self.insatisfaccion = int(insatisfaccionInicial) - insatisfaccionAleat
 
@@ -46,12 +47,18 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
     def actualizar_vecinos(self):
         """
-        Look around and see who my vecinos are
+        Miramos las casillas cercanas al agente
         """
+        #Obtenemos los vecinos que tiene el agente alrededor
         self.vecindario = self.cell.get_neighborhood(radius=self.visionAgente)
         #print(self.vecindario)
         self.vecinos = self.vecindario.agents
-        self.casillasVacias = [c for c in self.vecindario if c.is_empty]
+
+        #Obtenemos las casillas a las que puede moverse el agente actualmente
+        self.vecindarioMovimiento = self.cell.get_neighborhood(radius=self.visionMovimiento)
+        #print(self.vecindarioMovimiento)
+        self.casillasVacias = [c for c in self.vecindarioMovimiento if c.is_empty]
+
 
     def move(self):
         """Move to a random empty neighboring cell if movement is enabled."""

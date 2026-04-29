@@ -29,9 +29,9 @@ def agent_portrayal(agent):
         size = 30
 
     size=200
-    portrayal = AgentPortrayalStyle(color="blue", marker="^",size=200,x=agent.pos[0], y=agent.pos[1])
-    portrayal.update("color", color)
-    return portrayal
+    #portrayal = AgentPortrayalStyle(color="blue", marker="^",size=200,x=agent.pos[0], y=agent.pos[1])
+    #portrayal.update("color", color)
+    #return portrayal
     
     return AgentPortrayalStyle(
         color=color,
@@ -52,11 +52,8 @@ def post_process(ax):
 def propertylayer_portrayal(layer):
     return PropertyLayerStyle(color="lightblue", alpha=0.8, colorbar=False)
 
+
 def crear_visualizacion(modeloSociedad, parametrosModelo):
-    """
-    modelo_clase: La clase del modelo (sin instanciar).
-    model_params: Diccionario con Sliders y valores fijos.
-    """
     # Componentes
     renderizador = SpaceRenderer(modeloSociedad, backend="matplotlib",).setup_agents(agent_portrayal)  
     renderizador.draw_agents()
@@ -67,11 +64,11 @@ def crear_visualizacion(modeloSociedad, parametrosModelo):
     renderizador.render()
     graficoInsatisfaccionMedia = make_plot_component("Insatisfaccion_Media")
 
-    #Devolvemos la página
+    # Creamos y mostramos la visualización de la ejecución
     return SolaraViz(
-        modeloSociedad,
-        renderizador,
-        components=[graficoInsatisfaccionMedia],
-        model_params=parametrosModelo,
-        name="Simulación Sociedad"
-)
+            modeloSociedad,
+            renderizador,
+            components=[graficoInsatisfaccionMedia],
+            model_params=parametrosModelo,
+            name="Simulación Sociedad"
+            )

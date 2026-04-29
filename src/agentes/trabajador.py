@@ -13,10 +13,10 @@ import mesa
 class Trabajador(AgenteBase):
         
     
-    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, visionAgente=3, dineroInicial=500, insatisfaccionInicial=15.0, tiempoTrabajo=8, maxTiempoAlTrabajo=1.5):
+    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, visionAgente=3, movimientoAgente=1, dineroInicial=500, insatisfaccionInicial=15.0, tiempoTrabajo=8, maxTiempoAlTrabajo=1.5):
         
         # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
-        super().__init__(modelo, tiempoMaxPosible, tiempoVital, energiaInicial, porcentajeAleatorio, visionAgente, dineroInicial, insatisfaccionInicial)
+        super().__init__(modelo, tiempoMaxPosible, tiempoVital, energiaInicial, porcentajeAleatorio, visionAgente, movimientoAgente, dineroInicial, insatisfaccionInicial)
 
         self.tipo = "Trabajador"            
         
