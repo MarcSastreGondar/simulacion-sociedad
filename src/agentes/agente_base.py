@@ -9,14 +9,14 @@ import mesa
 class AgenteBase(mesa.discrete_space.CellAgent):
     """Clase base que contiene atributos y métodos comunes a todos los agentes."""
 
-    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, visionAgente=3, movimientoAgente=1, dineroInicial=500, insatisfaccionInicial=15.0):
+    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.5, umbralDepresion=10, mesesSuicidio=24, visionAgente=3, movimientoAgente=1, dineroInicial=500, felicidadInicial=60.0):
         super().__init__(modelo)
 
         # Definimos los atributos comunes entre todos los agentes
         #Usamos el mismo RandomNumberGenerator que tiene el modelo
         self.aleat = modelo.rng
         
-        self.tipo = "Ninguno"
+        self.tipo = "Ninguno"        
 
         self.visionAgente = visionAgente
         self.visionMovimiento = movimientoAgente
@@ -36,15 +36,26 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
 
         #Grado de desagrado por la situación en la que se encuentra el agente. Entre 0 (mínimo) y 100 (máximo)
-        insatisfaccionAleat = porcentajeAleatorio * insatisfaccionInicial
-        insatisfaccionAleat = int(self.aleat.uniform(0, insatisfaccionAleat))  #- un porcentaje del que tiene inicialmente
+        felicidadAleat = porcentajeAleatorio * felicidadInicial
+        felicidadAleat = int(self.aleat.uniform(-felicidadAleat, felicidadAleat))  #+- un porcentaje del que tiene inicialmente
 
-        self.insatisfaccion = int(insatisfaccionInicial) - insatisfaccionAleat
+        self.felicidad = int(felicidadInicial) + felicidadAleat
 
-        if(self.insatisfaccion > 100.0):    #Aseguramos de que no sobrepase el máximo
-            self.insatisfaccion = 100.0
+        
+        self.umbralDepresion = umbralDepresion          #A partir de qué punto de felicidad empezamos a considerar que el agente tiene depresión
+        self.diasDepresion = 0                          #Cantidad de días que lleva el agente en depresión
+        self.diasSuicidio = mesesSuicidio * 31          #Cantidad de días con depresión acumulados que llevan al agente a ser borrado. Meses * Dias en un mes
+
+        # Aseguramos de que no sobrepase ni el mínimo ni el máximo
+        if(self.felicidad > 100.0):
+            self.felicidad = 100.0
+        
+        elif (self.felicidad < 0.0):
+            self.felicidad = 0.0
+            
 
 
+    # Métodos comunes de los agentes
     def actualizar_vecinos(self):
         """
         Miramos las casillas cercanas al agente
@@ -67,10 +78,40 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             self.move_to(nuevaPosicion)
 
 
+    def actualizarDepresion(self):
+
+        #Si tiene demasiada poca felicidad está deprimido y le sumamos un día con depresión
+        if self.felicidad < self.umbralDepresion:
+            self.diasDepresion += 1
+
+            #Si lleva demasiado tiempo deprimido, borramos el agente
+            if self.diasDepresion >= self.diasSuicidio:
+                eliminarAgente(self)
+
+        else:
+            #Si no está deprimido, disminuimos sus dias con depresión
+            self.diasDepresion -= 3
+
+            #Aseguramos que no sea menor al mínimo
+            if self.diasDepresion < 0:
+                self.diasDepresion = 0
+        
+
+    
+    def eliminarAgente(self):
+        '''Método que elimina permanentemente de la simulación a un agente. Es equivalente a la muerte de una persona y 
+           los agentes deben intentar evitarla a toda costa'''
+        self.remove()
+
+
     def printCaracteristicas(self):
-        print(f"Tipo del agente = {self.tipo}. Tiempo máximo posible = {self.tiempoMaxPosible}. Dinero inicial = {self.dinero}. Insatisfacción inicial = {self.insatisfaccion}.")
+        print(f"Tipo del agente = {self.tipo}. Tiempo máximo posible = {self.tiempoMaxPosible}. Dinero inicial = {self.dinero}. Felicidad inicial = {self.felicidad}.")
 
 
     def step(self):
-        """Método que deben sobrescribir las clases hijas"""
-        raise NotImplementedError("Las clases hijas deben implementar step()")
+        """Método que define qué deben hacer los agentes en cada step"""
+        raise NotImplementedError("Los agentes deben implementar el método step()")
+    
+    def elegirAccion(self):
+        """Método que define qué acciones puede tomar un agente en un cierto momento"""
+        raise NotImplementedError("Los agentes deben implementar el método elegirAccion()")
