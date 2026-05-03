@@ -134,7 +134,4 @@ class ModeloSociedad(mesa.Model):
         self.agents.shuffle_do("step")
 
         #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
-        self.datacollector.collect(self)
-        
-        
-        #r325tr32t3"$!$·/y5764 4675346325 1212  Aquí puedes añadir lógica global # - Calcular Gini - Calcular grievance medio - Detectar si hay revueltas activas - Aplicar posibles redistribuciones, etc.
+        self.datacollector.collect(self)        
