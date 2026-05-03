@@ -11,10 +11,10 @@ from .agente_base import AgenteBase
 class Empresario(AgenteBase):
         
     
-    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.2, umbralDepresion=10, mesesSuicidio=24, visionAgente=3, movimientoAgente=1, dineroInicial=15000, insatisfaccionInicial=0):
+    def __init__(self, modelo):
         
         # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
-        super().__init__(modelo, tiempoMaxPosible, tiempoVital, energiaInicial, porcentajeAleatorio, umbralDepresion, mesesSuicidio, visionAgente, movimientoAgente, dineroInicial, insatisfaccionInicial)
+        super().__init__(modelo, modelo.scenario.dineroInicialE, modelo.scenario.felicidadInicialE)
 
         self.tipo = "Empresario"
 
@@ -23,6 +23,7 @@ class Empresario(AgenteBase):
     def step(self):
         self.actualizar_vecinos()
         self.move()
+
         if self.felicidad > 0:
             self.felicidad -= 1
         self.actualizarDepresion()

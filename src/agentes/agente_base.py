@@ -9,7 +9,7 @@ import mesa
 class AgenteBase(mesa.discrete_space.CellAgent):
     """Clase base que contiene atributos y métodos comunes a todos los agentes."""
 
-    def __init__(self, modelo, tiempoMaxPosible=24, tiempoVital=8, energiaInicial=100, porcentajeAleatorio=0.5, umbralDepresion=10, mesesSuicidio=24, visionAgente=3, movimientoAgente=1, dineroInicial=500, felicidadInicial=60.0):
+    def __init__(self, modelo, dineroInicial, felicidadInicial):
         super().__init__(modelo)
 
         # Definimos los atributos comunes entre todos los agentes
@@ -18,33 +18,36 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         
         self.tipo = "Ninguno"        
 
-        self.visionAgente = visionAgente
-        self.visionMovimiento = movimientoAgente
+        self.visionAgente = self.scenario.visionAgente
+        self.visionMovimiento = self.scenario.movimientoAgente
 
         #Variables relacionadas con el tiempo del que dispone el agente para actuar cada día
-        self.tiempoMaxPosible = tiempoMaxPosible - tiempoVital                                          #Tiempo en horas que el agente tiene disponibles en un dia
+        self.tiempoVital = self.scenario.tiempoVital
+        self.tiempoMaxPosible = self.scenario.tiempoMaxPosible - self.tiempoVital              #Tiempo en horas que el agente tiene disponibles en un dia
         self.tiempoDisponible = self.tiempoMaxPosible                                                   #Tiempo que aún le queda disponible al agente para realizar acciones
 
         #Energia, la cual es necesaria para realizar acciones
-        self.energia = energiaInicial
+        self.energia = self.scenario.energiaMax
 
+
+        self.porcentajeAleatorio = self.scenario.porcentajeAleatorio
 
         #Cantidad de dinero que posee un agente en un cierto momento
-        dineroAleat = porcentajeAleatorio * dineroInicial
+        dineroAleat = self.porcentajeAleatorio * dineroInicial
         dineroAleat = int(self.aleat.uniform(-dineroAleat, dineroAleat))    #Introducimos aleatoriedad en la cantidad de dinero que tendrá cada agente inicialmente (+- un porcentaje)        
         self.dinero = int(dineroInicial) + dineroAleat
 
 
         #Grado de desagrado por la situación en la que se encuentra el agente. Entre 0 (mínimo) y 100 (máximo)
-        felicidadAleat = porcentajeAleatorio * felicidadInicial
+        felicidadAleat = self.porcentajeAleatorio * felicidadInicial
         felicidadAleat = int(self.aleat.uniform(-felicidadAleat, felicidadAleat))  #+- un porcentaje del que tiene inicialmente
 
         self.felicidad = int(felicidadInicial) + felicidadAleat
 
         
-        self.umbralDepresion = umbralDepresion          #A partir de qué punto de felicidad empezamos a considerar que el agente tiene depresión
-        self.diasDepresion = 0                          #Cantidad de días que lleva el agente en depresión
-        self.diasSuicidio = mesesSuicidio * 31          #Cantidad de días con depresión acumulados que llevan al agente a ser borrado. Meses * Dias en un mes
+        self.umbralDepresion = self.scenario.umbralDepresion            #A partir de qué punto de felicidad empezamos a considerar que el agente tiene depresión
+        self.diasDepresion = 0                                          #Cantidad de días que lleva el agente en depresión
+        self.diasSuicidio = self.scenario.mesesSuicidio * 31            #Cantidad de días con depresión acumulados que llevan al agente a ser borrado. Meses * Dias en un mes
 
         # Aseguramos de que no sobrepase ni el mínimo ni el máximo
         if(self.felicidad > 100.0):

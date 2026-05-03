@@ -3,7 +3,7 @@ Archivo para facilitar los imports del src desde el '.ipynb'.
 '''
 
 # Importamos el modelo principal
-from .modeloSociedad import ModeloSociedad
+from .modeloSociedad import ModeloSociedad, EscenarioSociedad
 
 # Importamos los distintos tipos de agentes
 from .agentes.trabajador import Trabajador
@@ -17,6 +17,7 @@ from .visualizacion import crear_visualizacion
 # En caso de querer exportar todo
 __all__ = [
     'ModeloSociedad',
+    'EscenarioSociedad',
     'Antisistema',
     'Empresario',    
     'Trabajador',
