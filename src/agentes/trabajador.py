@@ -33,6 +33,10 @@ class Trabajador(AgenteBase):
         '''Definimos las acciones que tomarán los trabajadores'''
         self.actualizar_vecinos()
         self.move()
+
+        if self.felicidad > 0:
+            self.felicidad -= 1
+
         self.actualizarDepresion()
 
     def elegirAccion(self):

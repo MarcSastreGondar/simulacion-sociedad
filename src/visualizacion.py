@@ -62,7 +62,7 @@ def crear_visualizacion(modeloSociedad, parametrosModelo):
     renderizador.post_process = post_process
 
     renderizador.render()
-    graficoInsatisfaccionMedia = make_plot_component("Insatisfaccion_Media")
+    graficoInsatisfaccionMedia = make_plot_component("Felicidad_Media")
 
     # Creamos y mostramos la visualización de la ejecución
     return SolaraViz(

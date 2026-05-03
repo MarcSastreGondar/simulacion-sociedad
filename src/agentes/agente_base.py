@@ -76,6 +76,12 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         if self.casillasVacias:
             nuevaPosicion = self.random.choice(self.casillasVacias)
             self.move_to(nuevaPosicion)
+        
+    
+    def eliminarAgente(self):
+        '''Método que elimina permanentemente de la simulación a un agente. Es equivalente a la muerte de una persona y 
+           los agentes deben intentar evitarla a toda costa'''
+        self.remove()
 
 
     def actualizarDepresion(self):
@@ -86,7 +92,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
             #Si lleva demasiado tiempo deprimido, borramos el agente
             if self.diasDepresion >= self.diasSuicidio:
-                eliminarAgente(self)
+                self.eliminarAgente()
 
         else:
             #Si no está deprimido, disminuimos sus dias con depresión
@@ -95,19 +101,13 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             #Aseguramos que no sea menor al mínimo
             if self.diasDepresion < 0:
                 self.diasDepresion = 0
-        
-
-    
-    def eliminarAgente(self):
-        '''Método que elimina permanentemente de la simulación a un agente. Es equivalente a la muerte de una persona y 
-           los agentes deben intentar evitarla a toda costa'''
-        self.remove()
 
 
     def printCaracteristicas(self):
         print(f"Tipo del agente = {self.tipo}. Tiempo máximo posible = {self.tiempoMaxPosible}. Dinero inicial = {self.dinero}. Felicidad inicial = {self.felicidad}.")
 
 
+    #Métodos que deben ser sobreescritos por los hijos
     def step(self):
         """Método que define qué deben hacer los agentes en cada step"""
         raise NotImplementedError("Los agentes deben implementar el método step()")
