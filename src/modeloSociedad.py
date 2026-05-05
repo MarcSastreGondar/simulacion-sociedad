@@ -82,7 +82,7 @@ class EscenarioSociedad(Scenario):
     tiempoEntrenar: float = 1.5              #1.5 horas
     cuotaGimnasio: int = 50
     aumentoEnergiaMaxEntrenar: int = 5
-    aumentoFelicidadEntrenar: int = 2
+    aumentoFelicidadEntrenar: int = 1
     
 
 '''Modelo principal de la simulación'''

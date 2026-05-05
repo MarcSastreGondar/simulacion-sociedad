@@ -95,13 +95,12 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             self.tiempoMensualidadGym -= 1
 
 
-    def aumentoEnergiaMax(self, energiaAumentar):
-        '''Aumentamos la energia máxima que puede obtener el agente estando totalmente descansado'''
-        self.energiaMax += energiaAumentar
+    def aumentoEnergia(self, energiaAumentar):
+        self.energia += energiaAumentar
 
-        #Si su energía máxima supera el máximo establecido, lo reestablecemos al máximo posible
-        if self.energiaMax > self.scenario.energiaMaxObtenible:
-            self.energiaMax = self.scenario.energiaMaxObtenible
+        #Si tiene más energía de la que es posible, simplemente la ponemos al máximo
+        if self.energia > self.energiaMax:
+            self.energia = self.energiaMax
 
     def aumentoFelicidad(self, felicidadAumentar):
         '''Aumentamos la felicidad que tiene actualmente el agente'''
@@ -110,6 +109,14 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         #Si su felicidad supera el máximo establecido, lo reestablecemos al máximo posible
         if self.felicidad > self.scenario.felicidadMax:
             self.felicidad = self.scenario.felicidadMax
+
+    def aumentoEnergiaMax(self, energiaAumentar):
+        '''Aumentamos la energia máxima que puede obtener el agente estando totalmente descansado'''
+        self.energiaMax += energiaAumentar
+
+        #Si su energía máxima supera el máximo establecido, lo reestablecemos al máximo posible
+        if self.energiaMax > self.scenario.energiaMaxObtenible:
+            self.energiaMax = self.scenario.energiaMaxObtenible
 
 
     def comprobarEnergiaTiempoDinero(self, energia=None, tiempo=None, dinero=None):
@@ -120,6 +127,22 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         else:
             return False
         
+
+    def ocupar(self, cantidadTiempo):
+        '''Método al que se llama cuando ya se ha comprobado que el agente tiene tiempo suficiente para realizar la acción y que ocupa al agente durante una cierta cantidad de time steps.
+            Diseñado para ser llamado en la propia acción que ocupa al agente'''
+        
+        cantidadTiempo -= 1.0               #Restamos 1 al tiempo que se mantiene ocupado ya que la primera hora (primer step) ya la invierte al realizar la acción
+        self.ocupado += cantidadTiempo      #Agregamos el tiempo que aún le queda por estar parado en otros steps a su contador de ocupado
+
+
+    def estaDisponible(self):
+        '''Método que determina si el agente está disponible y puede moverse, o se encuentra ocupado y no puede moverse'''
+        #Si está disponible (no está ocupado), devolvemos true
+        if self.ocupado < 1.0:
+            return True
+        else:
+            return False
 
 
     #Acciones que pueden realizar los agentes
@@ -141,24 +164,22 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             horas = self.scenario.horasMaximasDormir
 
         #Nos aseguramos de que duerma una cantidad de tiempo fácilmente controlable
-        redondearMediaHora(horas)
+        redondearDecimalMedio(horas)
 
         #Duerme la cantidad de horas decidida y recupera energía en función de la cantidad de horas que duerme
         energiaRecuperada = 1/self.energiaMax * horas
-        self.energia += energiaRecuperada
-
-        #Si tiene más energía de la que es posible, simplemente la ponemos al máximo
-        if self.energia > self.energiaMax:
-            self.energia = self.energiaMax
+        energiaRecuperada = redondearDecimalMedio(energiaRecuperada)
+        self.aumentoEnergia(energiaRecuperada)
         
-        #Lo ocupamos durmiendo durante 1 hora menos de las que duerme (porque la primera ya la duerme en este step)
-        self.ocupado += (horas - 1.0)
+        AUMENTAR FELICIDAD
+        
+        #Lo ocupamos durmiendo
+        self.ocupar(horas)
 
         return energiaRecuperada
 
         
 
-    #####
     def entrenarGimnasio(self):
         '''Método que simula que el agente decide entrenar en el gimnasio'''
         
@@ -182,8 +203,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
             self.aumentoEnergiaMax(self.scenario.aumentoEnergiaMaxEntrenar)
             self.aumentoFelicidad(self.scenario.aumentoFelicidadEntrenar)
-
-
+            self.ocupar(self.scenario.tiempoEntrenar)
 
     
     def actualizarDepresion(self):

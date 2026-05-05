@@ -3,6 +3,6 @@
 gashfd
 '''
 
-def redondearMediaHora(horas: float) -> float:
-        """Redondea un número de horas al múltiplo de 0.5 más cercano."""
-        return round(horas * 2) / 2
+def redondearDecimalMedio(valor: float) -> float:
+        """Redondea un número al múltiplo de 0.5 más cercano."""
+        return round(valor * 2) / 2

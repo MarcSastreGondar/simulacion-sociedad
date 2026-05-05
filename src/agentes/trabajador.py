@@ -22,7 +22,7 @@ class Trabajador(AgenteBase):
         
         #Obtenemos la cantidad de tiempo que pasa trabajando el agente
         self.tiempoTrabajo = self.scenario.tiempoTrabajo + self.aleat.uniform(0.25, self.scenario.maxTiempoAlTrabajo)     #Añadimos aleatoriedad en la cantidad de tiempo que necesita un agente para ir y volver del trabajo (entre 20 minutos y el tiempo introducido)
-        self.tiempoTrabajo = redondearMediaHora(self.tiempoTrabajo)
+        self.tiempoTrabajo = redondearDecimalMedio(self.tiempoTrabajo)
 
         #Usando sus gastos de tiempo obligatorios
         self.tiempoMaxPosible = self.tiempoMaxPosible - self.tiempoTrabajo
@@ -30,16 +30,23 @@ class Trabajador(AgenteBase):
 
 
     def step(self):
-        '''Definimos las acciones que tomarán los trabajadores'''
-        self.actualizar_vecinos()
-        self.move()
+        '''Definimos lo que puede hacer cada agente en su tiempo libre'''
+        #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
+        if self.estaDisponible():
+            self.actualizar_vecinos()
+            self.move()
 
-        if self.felicidad > 0:
-            self.felicidad -= 1
+            if self.felicidad > 0:
+                self.felicidad -= 1
 
-        self.actualizarDepresion()
+            self.actualizarDepresion()
+
+        else:
+            #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
+            self.ocupado -= 1
+
 
     def elegirAccion(self):
-        """Método que define qué acciones puede tomar un Trabajador en un cierto momento"""
+        '''Método que define qué acciones puede tomar un Trabajador en un cierto momento'''
         print()
         
