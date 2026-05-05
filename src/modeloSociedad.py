@@ -32,7 +32,10 @@ class EscenarioSociedad(Scenario):
     tiempoVital: float = 8.0                  #Tiempo en horas que se utiliza en hacer acciones necesarias para la supervivencia (comida, higiene, etc.)
 
     #Energia para realizar las acciones
-    energiaMax: float = 100.0
+    energiaMax: int = 100               #Energia máxima que puede llegar a tener este agente totalmente descansado
+    energiaMaxObtenible: int = 180      #Energia máxima que pueden llegar a tener los agentes
+
+    felicidadMax: int = 100
 
     #Cantidad de cada tipo de agente
     n_trabajadores: int = 100               #Cantidad de trabajadores
@@ -66,6 +69,20 @@ class EscenarioSociedad(Scenario):
     #Antisistema
     dineroInicialA: int = 50
     felicidadInicialA: int = 50
+
+
+    #Parámetros de configuración necesarios de las acciones que pueden realizar los agentes:
+    #Parámetros comunes entre todos los agentes:
+    #Dormir
+    horasMinimasDormir: float = 4.0
+    horasMaximasDormir: float = 8.0
+    
+    #Entrenar
+    energiaEntrenar: int = 10
+    tiempoEntrenar: float = 1.5              #1.5 horas
+    cuotaGimnasio: int = 50
+    aumentoEnergiaMaxEntrenar: int = 5
+    aumentoFelicidadEntrenar: int = 2
     
 
 '''Modelo principal de la simulación'''
@@ -77,12 +94,20 @@ class ModeloSociedad(mesa.Model):
         if escenario is None:
             escenario = EscenarioSociedad()
 
+        # Si los agentes no caben bien dentro de las casillas, aumentamos la cantidad de casillas
+        totalAgentes = escenario.n_antisistemas + escenario.n_empresarios + escenario.n_trabajadores
+        auxTotalAgentes = 2.5 * totalAgentes                                                             #Para quepan mejor y puedan moverse
+
+        while(auxTotalAgentes > (escenario.alturaGrid * escenario.anchuraGrid)):
+            escenario.alturaGrid += 1
+            escenario.anchuraGrid += 1
+
+
         super().__init__(scenario=escenario)
-        
+
 
         # Creamos las casillas en las que pueden moverse los agentes
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((self.scenario.anchuraGrid, self.scenario.alturaGrid), torus=True, random=self.random)  #torus = True para que los bordes del mapa están conectados entre sí
-
 
         # Creamos los agentes de cada tipo
         self.trabajadores = Trabajador.create_agents(self, self.scenario.n_trabajadores)
@@ -121,7 +146,6 @@ class ModeloSociedad(mesa.Model):
 
         #Lo inicializamos
         self.datacollector = mesa.DataCollector(model_reporters=model_reporters, agent_reporters=agent_reporters)
-
 
         self.running = True
         self.datacollector.collect(self)

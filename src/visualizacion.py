@@ -20,24 +20,20 @@ def agent_portrayal(agent):
         color = "#2ca02c"
         # Tamaño basado en riqueza (getattr evita errores si el atributo no existe aún)
         riqueza = getattr(agent, 'riqueza', 0)
-        size = 50 + min(100, riqueza / 100)
+
     elif agent.tipo == "Antisistema":
         color = "#d62728"
-        size = 60
+
     else:
         color = "#000000"
-        size = 30
 
-    size=200
-    #portrayal = AgentPortrayalStyle(color="blue", marker="^",size=200,x=agent.pos[0], y=agent.pos[1])
-    #portrayal.update("color", color)
-    #return portrayal
     
     return AgentPortrayalStyle(
         color=color,
-        size=size,
-        #marker="o",
-        #zorder=10 if agent.tipo == "Antisistema" else 5
+        size=500,
+        marker="o",
+        edgecolors="black",
+        linewidths=2
     )
 
 
@@ -62,13 +58,13 @@ def crear_visualizacion(modeloSociedad, parametrosModelo):
     renderizador.post_process = post_process
 
     renderizador.render()
-    graficoInsatisfaccionMedia = make_plot_component("Felicidad_Media")
+    graficoFelicidadMedia = make_plot_component("Felicidad_Media")
 
     # Creamos y mostramos la visualización de la ejecución
     return SolaraViz(
             modeloSociedad,
             renderizador,
-            components=[graficoInsatisfaccionMedia],
+            components=[graficoFelicidadMedia],
             model_params=parametrosModelo,
             name="Simulación Sociedad"
             )

@@ -5,9 +5,9 @@ gashfd
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
 from .agente_base import AgenteBase
-from ..metricas import *
 import mesa
 
+from ..metricas import *
 
 #Agente Trabajador, cuyo comportamiento se basa en asistir siempre al trabajo y ser relativamente obediente
 class Trabajador(AgenteBase):
