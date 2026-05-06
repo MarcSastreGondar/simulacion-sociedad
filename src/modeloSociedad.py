@@ -45,12 +45,14 @@ class EscenarioSociedad(Scenario):
     porcentajeAleatorio: float = 0.5
 
     umbralDepresion: int = 10        #A partir de qué punto de felicidad empezamos a considerar que el agente tiene depresión
-    mesesSuicidio: int = 24          #Cantidad de meses con depresión acumulados que llevan al agente a ser borrado
+    mesesSuicidio: int = 5          #Cantidad de meses con depresión acumulados que llevan al agente a ser borrado
 
 
     #Distancia a la que los agentes pueden ver, en todas direcciones
     visionAgente: int = 3
     movimientoAgente: int = 1
+
+    gastosDiarios: int = 20         #Dinero que se gasta cada día en cosas cuotidianas
 
     # Parámetros de configuración de agentes específicos
     #Trabajador

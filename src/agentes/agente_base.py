@@ -86,15 +86,8 @@ class AgenteBase(mesa.discrete_space.CellAgent):
            los agentes deben intentar evitarla a toda costa'''
         self.remove()
 
-    ##### QUE PASE UN DÍA CADA 24 STEPS, LLEVAR UN CONTADOR EN EL modeloSociedad
-    def avanceDiarioGeneral(self):
-        '''Método que simula el paso de un día a otro. Avanza los contadores y implementa cambios que están diseñados para avanzar diariamente'''
-        
-        #Avanzamos en 1 día la cuota del gym
-        if self.tiempoMensualidadGym > 0:
-            self.tiempoMensualidadGym -= 1
 
-
+    #Métodos auxiliares para aumentar los recursos de los agentes de manera controlada
     def aumentoEnergia(self, energiaAumentar):
         self.energia += energiaAumentar
 
@@ -118,7 +111,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         if self.energiaMax > self.scenario.energiaMaxObtenible:
             self.energiaMax = self.scenario.energiaMaxObtenible
 
-
+    #Métodos auxiliares para reducir los recursos de los agentes de manera controlada
     def comprobarEnergiaTiempoDinero(self, energia=None, tiempo=None, dinero=None):
         '''Método para comprobar si el agente tiene los recursos necesarios para realizar una cierta acción'''
         #Si el agente tiene igual o más energía de la necesaria y más o igual tiempo disponible que los que requieren la acción, devolvemos true
@@ -127,6 +120,16 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         else:
             return False
         
+
+    def disminuirDinero(self, dineroDisminuir):
+        '''Método para reducir el dinero que tiene el agente. Debería utilizarse única y exclusivamente en caso de que no importe que el agente
+        no tenga dinero suficiente para completar la acción ya que esta debe realizarse sí o sí (como los gastos cuotidianos obligatorios)'''
+        self.dinero -= dineroDisminuir
+
+        #Comprobamos que no tenga una cantidad negativa de dinero
+        if self.dinero < 0:
+            self.dinero = 0
+
 
     def ocupar(self, cantidadTiempo):
         '''Método al que se llama cuando ya se ha comprobado que el agente tiene tiempo suficiente para realizar la acción y que ocupa al agente durante una cierta cantidad de time steps.
@@ -152,7 +155,6 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             nuevaPosicion = self.random.choice(self.casillasVacias)
             self.move_to(nuevaPosicion)
         
-
     #####
     def dormir(self, horas):
         '''Dormir para recuperar energia. Devuelve al cantidad de energia recuperada'''
@@ -171,7 +173,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         energiaRecuperada = redondearDecimalMedio(energiaRecuperada)
         self.aumentoEnergia(energiaRecuperada)
         
-        AUMENTAR FELICIDAD
+        ##################AUMENTAR FELICIDAD
         
         #Lo ocupamos durmiendo
         self.ocupar(horas)
@@ -206,6 +208,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             self.ocupar(self.scenario.tiempoEntrenar)
 
     
+    #Métodos para controlar el flujo de acciones o estado de los agentes
     def actualizarDepresion(self):
 
         #Si tiene demasiada poca felicidad está deprimido y le sumamos un día con depresión
@@ -229,7 +232,26 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         print(f"Tipo del agente = {self.tipo}. Tiempo máximo posible = {self.tiempoMaxPosible}. Dinero inicial = {self.dinero}. Felicidad inicial = {self.felicidad}.")
 
 
+    ##### QUE PASE UN DÍA CADA 24 STEPS, LLEVAR UN CONTADOR EN EL modeloSociedad
+    def avanceDiarioGeneral(self):
+        '''Método que simula el paso de un día a otro. Avanza los contadores y implementa cambios que están diseñados para avanzar diariamente'''
+        
+        #Reestablecemos la cantidad de tiempo disponible para el agente a su máximo
+        self.tiempoDisponible = self.tiempoMaxPosible
+
+        #########GASTOS CUOTIDIANOS!!!!!!!!!!!!!!
+        
+        #Avanzamos en 1 día la cuota del gym
+        if self.tiempoMensualidadGym > 0:
+            self.tiempoMensualidadGym -= 1
+
+
     #Métodos que deben ser sobreescritos por los hijos
+    def avanceDiarioEspecifico(self):
+        '''Método que simula el paso de un día a otro en las circunstancias específicas para cada tipo de agente. Cada tipo de agente debe
+         definir el suyo (aunque lo deje vacío)'''
+        raise NotImplementedError("Los agentes deben implementar el método step()")
+
     def step(self):
         '''Método que define qué deben hacer los agentes en cada step, el cual representa 1 hora'''
         raise NotImplementedError("Los agentes deben implementar el método step()")
@@ -237,3 +259,4 @@ class AgenteBase(mesa.discrete_space.CellAgent):
     def elegirAccion(self):
         """Método que define qué acciones puede tomar un agente en un cierto momento"""
         raise NotImplementedError("Los agentes deben implementar el método elegirAccion()")
+    

@@ -49,9 +49,9 @@ def propertylayer_portrayal(layer):
     return PropertyLayerStyle(color="lightblue", alpha=0.8, colorbar=False)
 
 
-def crear_visualizacion(modeloSociedad, parametrosModelo):
+def crear_visualizacion(modelo, parametrosModelo):
     # Componentes
-    renderizador = SpaceRenderer(modeloSociedad, backend="matplotlib",).setup_agents(agent_portrayal)  
+    renderizador = SpaceRenderer(modelo, backend="matplotlib",).setup_agents(agent_portrayal)  
     renderizador.draw_agents()
 
     #Quitamos la leyenda del gráfico con los agentes
@@ -62,7 +62,7 @@ def crear_visualizacion(modeloSociedad, parametrosModelo):
 
     # Creamos y mostramos la visualización de la ejecución
     return SolaraViz(
-            modeloSociedad,
+            modelo,
             renderizador,
             components=[graficoFelicidadMedia],
             model_params=parametrosModelo,
