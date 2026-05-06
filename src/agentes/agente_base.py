@@ -5,8 +5,9 @@ gashfd
 
 #Importamos la clase con el agente por defecto de Mesa
 import mesa
+from mesa.discrete_space import Cell 
 
-from ..metricas import *
+from metricas import *
 
 class AgenteBase(mesa.discrete_space.CellAgent):
     """Clase base que contiene atributos y métodos comunes a todos los agentes."""
@@ -18,6 +19,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         #Usamos el mismo RandomNumberGenerator que tiene el modelo
         self.aleat = modelo.rng
         
+        self.vivo = True
         self.tipo = "Ninguno"        
 
         self.visionAgente = self.scenario.visionAgente
@@ -68,6 +70,19 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
     # Métodos comunes de los agentes
     # Métodos auxiliares
+    def casillaVacia(self, celda: Cell):
+        '''Devuelve true si la casilla está o bien directamente vacía, o bien sólo contiene agentes muertos'''
+        hayAgenteVivo = False
+
+        for agente in celda.agents:
+            if agente.vivo:
+                hayAgenteVivo = True
+        
+        #Devolvemos True si no hay ningún agente vivo en ella (ya sea porque está vacía o porque haya uno muerto)
+        return (not hayAgenteVivo)
+
+        
+
     def actualizar_vecinos(self):
         '''
         Miramos las casillas cercanas al agente
@@ -78,13 +93,14 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         #Obtenemos las casillas a las que puede moverse el agente actualmente
         self.vecindarioMovimiento = self.cell.get_neighborhood(radius=self.visionMovimiento)
-        self.casillasVacias = [c for c in self.vecindarioMovimiento if c.is_empty]
+        self.casillasVacias = [c for c in self.vecindarioMovimiento if self.casillaVacia(c)] #####Meter que mire los agentes en la celda y que todos estén muertos
 
 
     def eliminarAgente(self):
         '''Método que elimina permanentemente de la simulación a un agente. Es equivalente a la muerte de una persona y 
            los agentes deben intentar evitarla a toda costa'''
-        self.remove()
+        #self.remove()
+        self.vivo = False
 
 
     #Métodos auxiliares para aumentar los recursos de los agentes de manera controlada
@@ -135,14 +151,16 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         '''Método al que se llama cuando ya se ha comprobado que el agente tiene tiempo suficiente para realizar la acción y que ocupa al agente durante una cierta cantidad de time steps.
             Diseñado para ser llamado en la propia acción que ocupa al agente'''
         
-        cantidadTiempo -= 1.0               #Restamos 1 al tiempo que se mantiene ocupado ya que la primera hora (primer step) ya la invierte al realizar la acción
-        self.ocupado += cantidadTiempo      #Agregamos el tiempo que aún le queda por estar parado en otros steps a su contador de ocupado
+        self.tiempoDisponible -= cantidadTiempo     #Le reducimos la cantidad de tiempo que tiene disponible el agente
+
+        cantidadTiempo -= 1.0                       #Restamos 1 al tiempo que se mantiene ocupado ya que la primera hora (primer step) ya la invierte al realizar la acción
+        self.ocupado += cantidadTiempo              #Agregamos el tiempo que aún le queda por estar parado en otros steps a su contador de ocupado
 
 
     def estaDisponible(self):
-        '''Método que determina si el agente está disponible y puede moverse, o se encuentra ocupado y no puede moverse'''
-        #Si está disponible (no está ocupado), devolvemos true
-        if self.ocupado < 1.0:
+        '''Método que determina si el agente está disponible y puede realizar acciones, o se encuentra ocupado o muerto y no puede'''
+        #Si está disponible (no está ocupado y está vivo), devolvemos true
+        if self.ocupado < 1.0 and self.vivo:
             return True
         else:
             return False
@@ -200,8 +218,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             
             self.dinero -= cuotaGimnasio
 
-            self.energia -= self.scenario.energiaEntrenar
-            self.tiempoDisponible -= self.scenario.tiempoEntrenar
+            self.energia -= self.scenario.energiaEntrenar 
 
             self.aumentoEnergiaMax(self.scenario.aumentoEnergiaMaxEntrenar)
             self.aumentoFelicidad(self.scenario.aumentoFelicidadEntrenar)
@@ -240,7 +257,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.tiempoDisponible = self.tiempoMaxPosible
 
         #########GASTOS CUOTIDIANOS!!!!!!!!!!!!!!
-        
+
         #Avanzamos en 1 día la cuota del gym
         if self.tiempoMensualidadGym > 0:
             self.tiempoMensualidadGym -= 1

@@ -7,7 +7,7 @@ gashfd
 from .agente_base import AgenteBase
 import mesa
 
-from ..metricas import *
+from metricas import *
 
 #Agente Trabajador, cuyo comportamiento se basa en asistir siempre al trabajo y ser relativamente obediente
 class Trabajador(AgenteBase):

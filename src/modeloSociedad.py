@@ -13,9 +13,9 @@ import pandas as pd
 import numpy as np  #Para el data collector
 
 # Imports de los agentes
-from .agentes.trabajador import Trabajador
-from .agentes.empresario import Empresario
-from .agentes.antisistema import Antisistema
+from agentes.trabajador import Trabajador
+from agentes.empresario import Empresario
+from agentes.antisistema import Antisistema
 
 '''Escenario de la sociedad, el cual contiene todos los parámetros de la ejecución'''
 class EscenarioSociedad(Scenario):
@@ -96,6 +96,8 @@ class ModeloSociedad(mesa.Model):
         if escenario is None:
             escenario = EscenarioSociedad()
 
+        super().__init__(scenario=escenario)
+
         # Si los agentes no caben bien dentro de las casillas, aumentamos la cantidad de casillas
         totalAgentes = escenario.n_antisistemas + escenario.n_empresarios + escenario.n_trabajadores
         auxTotalAgentes = 2.5 * totalAgentes                                                             #Para quepan mejor y puedan moverse
@@ -103,9 +105,6 @@ class ModeloSociedad(mesa.Model):
         while(auxTotalAgentes > (escenario.alturaGrid * escenario.anchuraGrid)):
             escenario.alturaGrid += 1
             escenario.anchuraGrid += 1
-
-
-        super().__init__(scenario=escenario)
 
 
         # Creamos las casillas en las que pueden moverse los agentes
@@ -124,7 +123,7 @@ class ModeloSociedad(mesa.Model):
             agente.cell = self.grid.all_cells.select_random_cell()
         
 
-        #TEMP!!!! Hacemos algunos step de cada agente para verificar que funcionan correctamente. De esta manera, nos saltará un error detallado al
+        #####TEMP!!!! Hacemos algunos step de cada agente para verificar que funcionan correctamente. De esta manera, nos saltará un error detallado al
         #ejecutar (en el gráfico de Solara los errores no son nada descriptivos o ni aparecen)
         self.agents.shuffle_do("step")
         self.agents.shuffle_do("step")
@@ -153,7 +152,12 @@ class ModeloSociedad(mesa.Model):
         self.datacollector.collect(self)
 
 
-    """Paso de tiempo de toda la simulación"""
+
+    def esNuevoDia(self):
+        '''Poner mejor nombre? Método que determina si han pasado 24 horas (steps) para empezar un nuevo día. Empieza los eventos diarios propios de los agentes'''
+        ######ESTO DEBERÍA IMPLEMENTARLO COMO UN MÉTODO QUE SE LEE EN CADA STEP, O COMO UN recurring_event??? (CREO QUE COMO UN recurring_event() mejor)
+
+    '''Paso de tiempo de toda la simulación'''
     def step(self):        
 
         # Ejecutamos el step() de todos los agentes en orden aleatorio.
