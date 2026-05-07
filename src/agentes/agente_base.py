@@ -19,7 +19,6 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         #Usamos el mismo RandomNumberGenerator que tiene el modelo
         self.aleat = modelo.rng
         
-        self.vivo = True
         self.tipo = "Ninguno"        
 
         self.visionAgente = self.scenario.visionAgente
@@ -70,19 +69,6 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
     # Métodos comunes de los agentes
     # Métodos auxiliares
-    def casillaVacia(self, celda: Cell):
-        '''Devuelve true si la casilla está o bien directamente vacía, o bien sólo contiene agentes muertos'''
-        hayAgenteVivo = False
-
-        for agente in celda.agents:
-            if agente.vivo:
-                hayAgenteVivo = True
-        
-        #Devolvemos True si no hay ningún agente vivo en ella (ya sea porque está vacía o porque haya uno muerto)
-        return (not hayAgenteVivo)
-
-        
-
     def actualizar_vecinos(self):
         '''
         Miramos las casillas cercanas al agente
@@ -93,14 +79,13 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         #Obtenemos las casillas a las que puede moverse el agente actualmente
         self.vecindarioMovimiento = self.cell.get_neighborhood(radius=self.visionMovimiento)
-        self.casillasVacias = [c for c in self.vecindarioMovimiento if self.casillaVacia(c)] #####Meter que mire los agentes en la celda y que todos estén muertos
+        self.casillasVacias = [c for c in self.vecindarioMovimiento if c.is_empty] #####Meter que mire los agentes en la celda y que todos estén muertos
 
 
     def eliminarAgente(self):
         '''Método que elimina permanentemente de la simulación a un agente. Es equivalente a la muerte de una persona y 
            los agentes deben intentar evitarla a toda costa'''
-        #self.remove()
-        self.vivo = False
+        self.remove()
 
 
     #Métodos auxiliares para aumentar los recursos de los agentes de manera controlada
@@ -159,8 +144,8 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
     def estaDisponible(self):
         '''Método que determina si el agente está disponible y puede realizar acciones, o se encuentra ocupado o muerto y no puede'''
-        #Si está disponible (no está ocupado y está vivo), devolvemos true
-        if self.ocupado < 1.0 and self.vivo:
+        #Si está disponible (no está ocupado), devolvemos true
+        if self.ocupado < 1.0:
             return True
         else:
             return False

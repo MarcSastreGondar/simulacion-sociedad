@@ -1,6 +1,3 @@
-def propertylayer_portrayal(layer):
-    return PropertyLayerStyle(color="lightblue", alpha=0.8, colorbar=False)
-
 '''
 '''
 
@@ -26,16 +23,13 @@ def agent_portrayal(agent):
         color = "#d62728"
     else:
         color = "#000000"
-    
-    # Si el agente está muerto, se vuelve transparente
-    opacidad = 1.0 
-    if not agent.vivo:
-        opacidad= 0.0
+
+    opacidad = 1.0
 
     return AgentPortrayalStyle(
         color=color,
         alpha=opacidad,
-        size=500,
+        size=400,
         marker="o",
         edgecolors="black",
         linewidths=2
@@ -47,25 +41,21 @@ def post_process(ax):
     ax.set_aspect("equal")
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.get_figure().set_size_inches(15, 15)
+    ax.get_figure().set_size_inches(13, 13)
 
 
 # Instanciamos el escenario para obtener los valores por defecto
 escenario = EscenarioSociedad()
 
-#Obtenemos los valores variables (los que se actualizarán con los sliders)
-n_trabajadores = 30
-n_empresarios = 80
-n_antisistemas = 100
+#Obtenemos los valores por defecto de las variables (los que se actualizarán con los sliders)
+n_trabajadores = escenario.n_trabajadores
+n_empresarios = escenario.n_empresarios
+n_antisistemas = escenario.n_antisistemas
 visionAgente = escenario.visionAgente
 porcentajeAleatorio = escenario.porcentajeAleatorio
 
-escenario.n_trabajadores = n_trabajadores
-escenario.n_empresarios = n_empresarios
 
-print(n_trabajadores)
-
-
+#Definimos los parámetros que se utilizarán en las simulaciones
 model_params = {
     # Parámetros editables en la interfaz gráfica
     "n_trabajadores": Slider("Cantidad de Trabajadores", n_trabajadores, 0, 1000, 10),
@@ -108,9 +98,9 @@ model_params = {
     "aumentoEnergiaMaxEntrenar": escenario.aumentoEnergiaMaxEntrenar,
     "aumentoFelicidadEntrenar": escenario.aumentoFelicidadEntrenar
 }
-print(n_trabajadores)
-# Instanciamos el modelo
-modeloSociedad = ModeloSociedad(cantTrabajadores=n_trabajadores,cantEmpresarios=n_empresarios, cantAntisistemas=n_antisistemas, escenario=escenario)
+
+# Instanciamos el modelo. Es vital para el correcto funcionamiento que el nombre de los parámetros que se pasen sea el mismo que el nombre de la variable que los recibe
+modeloSociedad = ModeloSociedad(n_trabajadores=n_trabajadores,n_empresarios=n_empresarios, n_antisistemas=n_antisistemas)
 
 # Configuramos el renderizador de espacio
 renderizador = SpaceRenderer(modeloSociedad, backend="matplotlib").setup_agents(agent_portrayal)
@@ -121,7 +111,6 @@ renderizador.post_process = post_process
 #Gráficos para enseñar la evolución de estadísticas
 graficoFelicidadMedia = make_plot_component("Felicidad_Media")
 
-AVERIGUAR POR QUÉ NO SE PASAN LOS PARÁMETROS. A LO MEJOR COMPROBAR SI EN MI VERSIÓN ESA ANTIGUA SE MODIFICABAN LOS PARÁMETROS O NO (PERO MEJOR INTENTAR ARREGLAR ESTE APPROACH)
 # Lanzamos la visualización con SolaraViz
 page = SolaraViz(
     modeloSociedad,

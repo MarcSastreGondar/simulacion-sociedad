@@ -90,35 +90,33 @@ class EscenarioSociedad(Scenario):
 '''Modelo principal de la simulación'''
 class ModeloSociedad(mesa.Model):    
     
-    def __init__(self, cantTrabajadores=10, cantEmpresarios=5, cantAntisistemas=5, escenario:EscenarioSociedad | None = None):
+    def __init__(self, n_trabajadores=10, n_empresarios=5, n_antisistemas=5):
         
-        #Si no se ha instanciado con un EscenarioSociedad por parámetro, lo instanciamos ahora
-        if escenario is None:
-            print("El escenario es None!!!")
-            escenario = EscenarioSociedad()        
+        #Instanciamos el escenario con los parámetros que se utilizarán para configurar la simulación
+        escenario = EscenarioSociedad()        
 
         #En caso de ser necesario, actualizamos los parámetros del escenario antes de crear el modelo
         # Si los agentes no caben bien dentro de las casillas, aumentamos la cantidad de casillas
-        totalAgentes = cantTrabajadores + cantEmpresarios + cantAntisistemas
+        totalAgentes = n_trabajadores + n_empresarios + n_antisistemas
         auxTotalAgentes = 2.5 * totalAgentes                                                             #Para quepan mejor y puedan moverse
 
 
-        '''while(auxTotalAgentes > (escenario.alturaGrid * escenario.anchuraGrid)):
+        while(auxTotalAgentes > (escenario.alturaGrid * escenario.anchuraGrid)):
             escenario.alturaGrid += 1
-            escenario.anchuraGrid += 1'''
+            escenario.anchuraGrid += 1
 
-
+    
         super().__init__(scenario=escenario)
 
         # Creamos las casillas en las que pueden moverse los agentes
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((self.scenario.anchuraGrid, self.scenario.alturaGrid), torus=True, random=self.random)  #torus = True para que los bordes del mapa están conectados entre sí
 
         # Creamos los agentes de cada tipo
-        self.trabajadores = Trabajador.create_agents(self, cantTrabajadores)
+        self.trabajadores = Trabajador.create_agents(self, n_trabajadores)
         
-        self.empresarios = Empresario.create_agents(self, cantEmpresarios)
+        self.empresarios = Empresario.create_agents(self, n_empresarios)
         
-        self.antisistemas = Antisistema.create_agents(self, cantAntisistemas)        
+        self.antisistemas = Antisistema.create_agents(self, n_antisistemas)        
 
 
         # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
@@ -132,7 +130,7 @@ class ModeloSociedad(mesa.Model):
         self.agents.shuffle_do("step")
         self.agents.shuffle_do("step")
 
-        print("Valores vars cant de agentes:", cantTrabajadores, cantEmpresarios, cantAntisistemas)
+        print("Valores vars cant de agentes:", n_trabajadores, n_empresarios, n_antisistemas)
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
         #self.agents.do("printCaracteristicas")
         
@@ -150,8 +148,6 @@ class ModeloSociedad(mesa.Model):
 
         #Lo inicializamos
         self.datacollector = mesa.DataCollector(model_reporters=model_reporters, agent_reporters=agent_reporters)
-
-        self.running = True
         self.datacollector.collect(self)
 
 
