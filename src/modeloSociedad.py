@@ -19,9 +19,9 @@ from agentes.antisistema import Antisistema
 
 '''Escenario de la sociedad, el cual contiene todos los parámetros de la ejecución'''
 class EscenarioSociedad(Scenario):
-    #Tamaño del tablero en el que pueden estar los agentes
-    anchuraGrid: int = 20
-    alturaGrid: int = 20
+    #Tamaño del tablero en el que pueden estar los agentes (se adapta automáticamente en caso de ser demasiado pequeño)
+    anchuraGrid: int = 15
+    alturaGrid: int = 15
 
     #Generador de números pseudoaleatorios para poder repetir resultados en las ejecuciones
     rng: int = 150
@@ -90,32 +90,35 @@ class EscenarioSociedad(Scenario):
 '''Modelo principal de la simulación'''
 class ModeloSociedad(mesa.Model):    
     
-    def __init__(self, escenario:EscenarioSociedad | None = None):
-
+    def __init__(self, cantTrabajadores=10, cantEmpresarios=5, cantAntisistemas=5, escenario:EscenarioSociedad | None = None):
+        
         #Si no se ha instanciado con un EscenarioSociedad por parámetro, lo instanciamos ahora
         if escenario is None:
-            escenario = EscenarioSociedad()
+            print("El escenario es None!!!")
+            escenario = EscenarioSociedad()        
 
-        super().__init__(scenario=escenario)
-
+        #En caso de ser necesario, actualizamos los parámetros del escenario antes de crear el modelo
         # Si los agentes no caben bien dentro de las casillas, aumentamos la cantidad de casillas
-        totalAgentes = escenario.n_antisistemas + escenario.n_empresarios + escenario.n_trabajadores
+        totalAgentes = cantTrabajadores + cantEmpresarios + cantAntisistemas
         auxTotalAgentes = 2.5 * totalAgentes                                                             #Para quepan mejor y puedan moverse
 
-        while(auxTotalAgentes > (escenario.alturaGrid * escenario.anchuraGrid)):
-            escenario.alturaGrid += 1
-            escenario.anchuraGrid += 1
 
+        '''while(auxTotalAgentes > (escenario.alturaGrid * escenario.anchuraGrid)):
+            escenario.alturaGrid += 1
+            escenario.anchuraGrid += 1'''
+
+
+        super().__init__(scenario=escenario)
 
         # Creamos las casillas en las que pueden moverse los agentes
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((self.scenario.anchuraGrid, self.scenario.alturaGrid), torus=True, random=self.random)  #torus = True para que los bordes del mapa están conectados entre sí
 
         # Creamos los agentes de cada tipo
-        self.trabajadores = Trabajador.create_agents(self, self.scenario.n_trabajadores)
+        self.trabajadores = Trabajador.create_agents(self, cantTrabajadores)
         
-        self.empresarios = Empresario.create_agents(self, self.scenario.n_empresarios)
+        self.empresarios = Empresario.create_agents(self, cantEmpresarios)
         
-        self.antisistemas = Antisistema.create_agents(self, self.scenario.n_antisistemas)        
+        self.antisistemas = Antisistema.create_agents(self, cantAntisistemas)        
 
 
         # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
@@ -129,7 +132,7 @@ class ModeloSociedad(mesa.Model):
         self.agents.shuffle_do("step")
         self.agents.shuffle_do("step")
 
-
+        print("Valores vars cant de agentes:", cantTrabajadores, cantEmpresarios, cantAntisistemas)
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
         #self.agents.do("printCaracteristicas")
         

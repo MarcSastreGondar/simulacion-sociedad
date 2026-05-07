@@ -53,13 +53,26 @@ def post_process(ax):
 # Instanciamos el escenario para obtener los valores por defecto
 escenario = EscenarioSociedad()
 
-parametrosModelo = {
-    # Parámetros editables vía UI
-    "n_trabajadores": Slider("Cantidad de Trabajadores", 10, 0, 1000, 10),
-    "n_empresarios": Slider("Cantidad de Empresarios", 5, 0, 1000, 10),
-    "n_antisistemas": Slider("Cantidad de Agentes Antisistema", 10, 0, 1000, 10),
-    "visionAgente": Slider("Visión Agentes", escenario.visionAgente, 0, 20, 1),
-    "porcentajeAleatorio": Slider("Variabilidad Inicial", escenario.porcentajeAleatorio, 0.0, 1.0, 0.1),
+#Obtenemos los valores variables (los que se actualizarán con los sliders)
+n_trabajadores = 30
+n_empresarios = 80
+n_antisistemas = 100
+visionAgente = escenario.visionAgente
+porcentajeAleatorio = escenario.porcentajeAleatorio
+
+escenario.n_trabajadores = n_trabajadores
+escenario.n_empresarios = n_empresarios
+
+print(n_trabajadores)
+
+
+model_params = {
+    # Parámetros editables en la interfaz gráfica
+    "n_trabajadores": Slider("Cantidad de Trabajadores", n_trabajadores, 0, 1000, 10),
+    "n_empresarios": Slider("Cantidad de Empresarios", n_empresarios, 0, 1000, 10),
+    "n_antisistemas": Slider("Cantidad de Agentes Antisistema", n_antisistemas, 0, 1000, 10),
+    "visionAgente": Slider("Visión Agentes", visionAgente, 0, 20, 1),
+    "porcentajeAleatorio": Slider("Variabilidad Inicial", porcentajeAleatorio, 0.0, 1.0, 0.1),
     
     # Parámetros fijos
     "anchuraGrid": escenario.anchuraGrid,
@@ -95,9 +108,9 @@ parametrosModelo = {
     "aumentoEnergiaMaxEntrenar": escenario.aumentoEnergiaMaxEntrenar,
     "aumentoFelicidadEntrenar": escenario.aumentoFelicidadEntrenar
 }
-
+print(n_trabajadores)
 # Instanciamos el modelo
-modeloSociedad = ModeloSociedad(escenario=escenario)
+modeloSociedad = ModeloSociedad(cantTrabajadores=n_trabajadores,cantEmpresarios=n_empresarios, cantAntisistemas=n_antisistemas, escenario=escenario)
 
 # Configuramos el renderizador de espacio
 renderizador = SpaceRenderer(modeloSociedad, backend="matplotlib").setup_agents(agent_portrayal)
@@ -108,12 +121,13 @@ renderizador.post_process = post_process
 #Gráficos para enseñar la evolución de estadísticas
 graficoFelicidadMedia = make_plot_component("Felicidad_Media")
 
+AVERIGUAR POR QUÉ NO SE PASAN LOS PARÁMETROS. A LO MEJOR COMPROBAR SI EN MI VERSIÓN ESA ANTIGUA SE MODIFICABAN LOS PARÁMETROS O NO (PERO MEJOR INTENTAR ARREGLAR ESTE APPROACH)
 # Lanzamos la visualización con SolaraViz
 page = SolaraViz(
     modeloSociedad,
     renderizador,
-    components=[graficoFelicidadMedia],
-    model_params=parametrosModelo,
+    components=[],#graficoFelicidadMedia],
+    model_params=model_params,
     name="Simulación Sociedad",
 )
 
