@@ -88,48 +88,61 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.remove()
 
 
-    #Métodos auxiliares para aumentar los recursos de los agentes de manera controlada
-    def aumentoEnergia(self, energiaAumentar):
-        self.energia += energiaAumentar
-
-        #Si tiene más energía de la que es posible, simplemente la ponemos al máximo
-        if self.energia > self.energiaMax:
-            self.energia = self.energiaMax
-
-    def aumentoFelicidad(self, felicidadAumentar):
-        '''Aumentamos la felicidad que tiene actualmente el agente'''
-        self.felicidad += felicidadAumentar
-
-        #Si su felicidad supera el máximo establecido, lo reestablecemos al máximo posible
-        if self.felicidad > self.scenario.felicidadMax:
-            self.felicidad = self.scenario.felicidadMax
-
-    def aumentoEnergiaMax(self, energiaAumentar):
-        '''Aumentamos la energia máxima que puede obtener el agente estando totalmente descansado'''
-        self.energiaMax += energiaAumentar
-
-        #Si su energía máxima supera el máximo establecido, lo reestablecemos al máximo posible
-        if self.energiaMax > self.scenario.energiaMaxObtenible:
-            self.energiaMax = self.scenario.energiaMaxObtenible
-
-    #Métodos auxiliares para reducir los recursos de los agentes de manera controlada
+    #Métodos auxiliares para modificar los recursos de los agentes de manera controlada
     def comprobarEnergiaTiempoDinero(self, energia=None, tiempo=None, dinero=None):
-        '''Método para comprobar si el agente tiene los recursos necesarios para realizar una cierta acción'''
+        '''Método principal para comprobar si el agente puede realizar una acción. Comprueba si el agente tiene los recursos necesarios para realizar una cierta acción'''
         #Si el agente tiene igual o más energía de la necesaria y más o igual tiempo disponible que los que requieren la acción, devolvemos true
         if (self.energia >= energia or energia is None) and (self.tiempoDisponible >= tiempo or tiempo is None) and (self.dinero >= dinero or dinero is None):
             return True
         else:
             return False
         
+    def modificarEnergiaFelicidadDinero(self, modificacionEnergia=None, modificacionFelicidad=None, modificacionDinero=None):
+        '''Método para modificar los recursos del agente. Los valores introducidos pueden ser positivos o negativos dependiendo de si se quieren aumentar o disminuir los recursos.'''
+        #Comprobamos si se ha modificado la energía
+        if (modificacionEnergia is not None):
+            self.energia += modificacionEnergia
 
-    def disminuirDinero(self, dineroDisminuir):
-        '''Método para reducir el dinero que tiene el agente. Debería utilizarse única y exclusivamente en caso de que no importe que el agente
-        no tenga dinero suficiente para completar la acción ya que esta debe realizarse sí o sí (como los gastos cuotidianos obligatorios)'''
-        self.dinero -= dineroDisminuir
+            #Si tiene más energía de la que es posible, simplemente la ponemos al máximo
+            if self.energia > self.energiaMax:
+                self.energia = self.energiaMax
 
-        #Comprobamos que no tenga una cantidad negativa de dinero
-        if self.dinero < 0:
-            self.dinero = 0
+            #Si tiene menos energía de la que es posible, simplemente la ponemos al mínimo
+            if self.energia < 0:
+                self.energia = 0
+
+        #Comprobamos si se ha modificado la felicidad
+        if (modificacionFelicidad is not None):
+            self.felicidad += modificacionFelicidad
+
+            #Si su felicidad supera el máximo establecido, lo reestablecemos al máximo posible
+            if self.felicidad > self.scenario.felicidadMax:
+                self.felicidad = self.scenario.felicidadMax
+
+            #Si su felicidad supera el mínimo establecido, lo reestablecemos al mínimo posible
+            if self.felicidad < 0:
+                self.felicidad = 0 
+        
+        #Comprobamos si se ha modificado el dinero
+        if (modificacionDinero is not None):
+            self.dinero += modificacionDinero
+
+            #Comprobamos que no tenga una cantidad negativa de dinero
+            if self.dinero < 0:
+                self.dinero = 0
+
+
+    def modificarEnergiaMax(self, modificacionEnergiaMax):
+        '''Modificamos la energia máxima que puede obtener el agente estando totalmente descansado'''
+        self.energiaMax += modificacionEnergiaMax
+
+        #Si su energía máxima supera el máximo establecido, lo reestablecemos al máximo posible
+        if self.energiaMax > self.scenario.energiaMaxObtenible:
+            self.energiaMax = self.scenario.energiaMaxObtenible
+
+        #Si su energía mínima está por debajo del mínimo establecido, lo reestablecemos al mínimo posible
+        if self.energiaMax < self.scenario.energiaMinObtenible:
+            self.energiaMax = self.scenario.energiaMinObtenible
 
 
     def ocupar(self, cantidadTiempo):
@@ -143,7 +156,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
 
     def estaDisponible(self):
-        '''Método que determina si el agente está disponible y puede realizar acciones, o se encuentra ocupado o muerto y no puede'''
+        '''Método que determina si el agente está disponible y puede realizar acciones, o se encuentra ocupado y no puede'''
         #Si está disponible (no está ocupado), devolvemos true
         if self.ocupado < 1.0:
             return True
@@ -172,9 +185,9 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         redondearDecimalMedio(horas)
 
         #Duerme la cantidad de horas decidida y recupera energía en función de la cantidad de horas que duerme
-        energiaRecuperada = 1/self.energiaMax * horas
+        energiaRecuperada = 1/self.horasMaximasDormir * horas
         energiaRecuperada = redondearDecimalMedio(energiaRecuperada)
-        self.aumentoEnergia(energiaRecuperada)
+        self.modificarEnergiaFelicidadDinero(energiaModificada=energiaRecuperada)
         
         ##################AUMENTAR FELICIDAD
         
@@ -201,12 +214,9 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             if cuotaGimnasio != 0:
                 self.tiempoMensualidadGym = 30
             
-            self.dinero -= cuotaGimnasio
-
-            self.energia -= self.scenario.energiaEntrenar 
-
-            self.aumentoEnergiaMax(self.scenario.aumentoEnergiaMaxEntrenar)
-            self.aumentoFelicidad(self.scenario.aumentoFelicidadEntrenar)
+            #Modificamos los recursos necesarios por haber realizado las acciones
+            self.modificarEnergiaFelicidadDinero(modificacionEnergia=self.scenario.energiaEntrenar, modificacionFelicidad=self.scenario.aumentoFelicidadEntrenar, modificacionDinero=cuotaGimnasio)
+            self.modificarEnergiaMax(self.scenario.aumentoEnergiaMaxEntrenar)
             self.ocupar(self.scenario.tiempoEntrenar)
 
     

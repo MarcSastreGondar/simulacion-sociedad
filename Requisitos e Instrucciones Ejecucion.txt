@@ -36,11 +36,16 @@ Cómo usar este entorno después de crearlo y cómo ejecutar:
 venv\Scripts\activate     # Windows
 source venv/bin/activate  # Linux / macOS:
 
-2. En el notebooks/simulacionSociedad.ipynb:
-    2.1 Abrir el archivo
-    2.2 Pulsar el botón de "Select Kernel" y elegir el venv que hemos creado
-    2.3 Pulsar el botón de "Restart Kernel" y darle al botón de "Run All"
-    2.3 En el apartado de visualización, usar la interfaz gráfica del Cell Output para realizar la ejecución que se quiera.
+2. Ejecutamos la simulación
+cd src
+solara run .\visualizacion.py
+
+3. Dentro de la simulación 
+
+4. En el notebooks/...:
+    4.1 Abrir el archivo
+    4.2 Pulsar el botón de "Select Kernel" y elegir el venv que hemos creado
+    4.3 Pulsar el botón de "Restart Kernel" y darle al botón de "Run All"
 
 
 Puede ser necesario seleccionar la versión 3.12.10 como Intérprete de Python en VS Code:

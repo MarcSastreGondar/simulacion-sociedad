@@ -17,7 +17,8 @@ from agentes.trabajador import Trabajador
 from agentes.empresario import Empresario
 from agentes.antisistema import Antisistema
 
-'''Escenario de la sociedad, el cual contiene todos los parámetros de la ejecución'''
+'''Escenario de la sociedad, el cual contiene todos los parámetros de la ejecución. El valor de los parámetros de los recursos (como la energia, felicidad, etc.) deben ser
+   positivos en caso de que quiera que se aumenten o negativos si se quieren disminuir excepto en el caso del tiempo, que debe ser siempre positivo.'''
 class EscenarioSociedad(Scenario):
     #Tamaño del tablero en el que pueden estar los agentes (se adapta automáticamente en caso de ser demasiado pequeño)
     anchuraGrid: int = 15
@@ -33,6 +34,7 @@ class EscenarioSociedad(Scenario):
 
     #Energia para realizar las acciones
     energiaMax: int = 100               #Energia máxima que puede llegar a tener este agente totalmente descansado
+    energiaMinObtenible: int = 50       #Energia mínima que pueden llegar a tener los agentes
     energiaMaxObtenible: int = 180      #Energia máxima que pueden llegar a tener los agentes
 
     felicidadMax: int = 100
