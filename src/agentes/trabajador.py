@@ -43,7 +43,7 @@ class Trabajador(AgenteBase):
 
         else:
             #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
-            self.ocupado -= 1
+            self.ocupado -= 1.0
 
 
     def elegirAccion(self):

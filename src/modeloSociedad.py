@@ -80,11 +80,13 @@ class EscenarioSociedad(Scenario):
     #Dormir
     horasMinimasDormir: float = 4.0
     horasMaximasDormir: float = 8.0
+    felicidadDormirMal: int = -2
+    felicidadDormirBien: int = 3
     
     #Entrenar
-    energiaEntrenar: int = 10
+    energiaEntrenar: int = -10
     tiempoEntrenar: float = 1.5              #1.5 horas
-    cuotaGimnasio: int = 50
+    cuotaGimnasio: int = -50
     aumentoEnergiaMaxEntrenar: int = 5
     aumentoFelicidadEntrenar: int = 1
     

@@ -79,7 +79,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         #Obtenemos las casillas a las que puede moverse el agente actualmente
         self.vecindarioMovimiento = self.cell.get_neighborhood(radius=self.visionMovimiento)
-        self.casillasVacias = [c for c in self.vecindarioMovimiento if c.is_empty] #####Meter que mire los agentes en la celda y que todos estén muertos
+        self.casillasVacias = [c for c in self.vecindarioMovimiento if c.is_empty]
 
 
     def eliminarAgente(self):
@@ -171,9 +171,9 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             nuevaPosicion = self.random.choice(self.casillasVacias)
             self.move_to(nuevaPosicion)
         
-    #####
+
     def dormir(self, horas):
-        '''Dormir para recuperar energia. Devuelve al cantidad de energia recuperada'''
+        '''Dormir para recuperar energia'''
         #Comprobamos que no pretenda dormir o demasiado o demasiado poco tiempo
         if horas < self.scenario.horasMinimasDormir:
             horas = self.scenario.horasMinimasDormir
@@ -184,17 +184,33 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         #Nos aseguramos de que duerma una cantidad de tiempo fácilmente controlable
         redondearDecimalMedio(horas)
 
-        #Duerme la cantidad de horas decidida y recupera energía en función de la cantidad de horas que duerme
-        energiaRecuperada = 1/self.horasMaximasDormir * horas
-        energiaRecuperada = redondearDecimalMedio(energiaRecuperada)
-        self.modificarEnergiaFelicidadDinero(energiaModificada=energiaRecuperada)
-        
-        ##################AUMENTAR FELICIDAD
-        
-        #Lo ocupamos durmiendo
-        self.ocupar(horas)
+        #En caso de que no tenga tiempo suficiente para dormir tanto como quiere, reducimos la cantidad de horas que podrá dormir hasta que, o bien pueda dormir, o bien no llegue al mínimo
+        while((not self.comprobarEnergiaTiempoDinero(tiempo=horas)) and (horas > self.scenario.horasMinimasDormir)):
+            horas -= 0.5      #Restamos media hora
 
-        return energiaRecuperada
+        #Comprobamos si tiene la cantidad suficiente de horas disponibles para dormir
+        if self.comprobarEnergiaTiempoDinero(tiempo=horas):
+            #Duerme la cantidad de horas decidida y recupera energía en función de la cantidad de horas que duerme
+            porcentajeRecuperado = 1/self.horasMaximasDormir * horas
+            energiaRecuperada = int(self.energiaMax * porcentajeRecuperado)
+
+            #Si duerme especialmente bien o especialmente mal modifica su felicidad
+            felicidadModificada = None    
+            if horas >= 0.8*self.scenario.horasMaximasDormir:               #Si duerme un 80% o más del máximo, aumenta su felicidad
+                felicidadModificada = self.scenario.felicidadDormirBien
+            if horas <= 0.6*self.scenario.horasMaximasDormir:               #Si duerme un 60% o menos del máximo, disminuye su felicidad
+                felicidadModificada = self.scenario.felicidadDormirMal
+
+            self.modificarEnergiaFelicidadDinero(energiaModificada=energiaRecuperada, modificacionFelicidad=felicidadModificada)
+            
+            #Lo ocupamos durmiendo
+            self.ocupar(horas)
+
+            return True
+        
+        #Si no tiene la suficiente cantidad de tiempo para dormir, no duerme
+        return False
+    
 
         
 
@@ -218,6 +234,11 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             self.modificarEnergiaFelicidadDinero(modificacionEnergia=self.scenario.energiaEntrenar, modificacionFelicidad=self.scenario.aumentoFelicidadEntrenar, modificacionDinero=cuotaGimnasio)
             self.modificarEnergiaMax(self.scenario.aumentoEnergiaMaxEntrenar)
             self.ocupar(self.scenario.tiempoEntrenar)
+
+            return True
+        
+        #Si no puede realizar la acción, devolvemos False
+        return False
 
     
     #Métodos para controlar el flujo de acciones o estado de los agentes
