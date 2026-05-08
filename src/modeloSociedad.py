@@ -54,7 +54,9 @@ class EscenarioSociedad(Scenario):
     visionAgente: int = 3
     movimientoAgente: int = 1
 
-    gastosDiarios: int = 20         #Dinero que se gasta cada día en cosas cuotidianas
+    porcentajeGastosCuotidianos: float = 0.01   #Gastan un 1% de su dinero en gastos cuotidianos, con un máximo y mínimo
+    gastosDiariosMin: int = -10                 #Dinero que se gasta cada día en cosas cuotidianas
+    gastosDiariosMax: int = -30
 
     # Parámetros de configuración de agentes específicos
     #Trabajador
@@ -89,6 +91,11 @@ class EscenarioSociedad(Scenario):
     cuotaGimnasio: int = -50
     aumentoEnergiaMaxEntrenar: int = 5
     aumentoFelicidadEntrenar: int = 1
+
+    #Compra lujosa
+    costeLujo: int = -300
+    felicidadLujo: int = 12
+    tiempoLujo: int = 1
     
 
 '''Modelo principal de la simulación'''
