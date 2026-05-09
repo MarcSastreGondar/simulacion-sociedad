@@ -29,6 +29,12 @@ class Empresario(AgenteBase):
         self.actualizarDepresion()
 
 
+    def avanceDiarioEspecifico(self):
+        '''Método que simula el paso de un día a otro para los Empresarios'''
+
+    def avanceSemanalEspecifico(self):
+        '''Método que simula el paso de una semana a otra para los Empresarios'''
+
     def elegirAccion(self):
         """Método que define qué acciones puede tomar un Empresario en un cierto momento"""
         print()

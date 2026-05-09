@@ -27,6 +27,12 @@ class Antisistema(AgenteBase):
         self.actualizarDepresion()
 
 
+    def avanceDiarioEspecifico(self):
+        '''Método que simula el paso de un día a otro para los Antisistema'''
+
+    def avanceSemanalEspecifico(self):
+        '''Método que simula el paso de una semana a otra para los Antisistema'''
+
     def elegirAccion(self):
         """Método que define qué acciones puede tomar un Antisistema en un cierto momento"""
         print()

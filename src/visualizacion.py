@@ -71,32 +71,73 @@ model_params = {
     "tiempoMaxPosible": escenario.tiempoMaxPosible,
     "tiempoVital": escenario.tiempoVital,
     "energiaMax": escenario.energiaMax,
+    "energiaMinObtenible": escenario.energiaMinObtenible,
     "energiaMaxObtenible": escenario.energiaMaxObtenible,
     "felicidadMax": escenario.felicidadMax,
     "umbralDepresion": escenario.umbralDepresion,
     "mesesSuicidio": escenario.mesesSuicidio,
     "movimientoAgente": escenario.movimientoAgente,
-    "gastosDiarios": escenario.gastosDiarios,
+    
+    # Cambios diarios y gastos
+    "reduccionDiariaFelicidad": escenario.reduccionDiariaFelicidad,
+    "porcentajeGastosCuotidianos": escenario.porcentajeGastosCuotidianos,
+    "gastosDiariosMin": escenario.gastosDiariosMin,
+    "gastosDiariosMax": escenario.gastosDiariosMax,
 
+    # Configuración específica por tipo de agente
     "dineroInicialT": escenario.dineroInicialT,
     "felicidadInicialT": escenario.felicidadInicialT,
-    "tiempoTrabajo": escenario.tiempoTrabajo,
-    "maxTiempoAlTrabajo": escenario.maxTiempoAlTrabajo,
-
     "dineroInicialE": escenario.dineroInicialE,
     "felicidadInicialE": escenario.felicidadInicialE,
-
     "dineroInicialA": escenario.dineroInicialA,
     "felicidadInicialA": escenario.felicidadInicialA,
 
+    # Acción: Dormir
     "horasMinimasDormir": escenario.horasMinimasDormir,
     "horasMaximasDormir": escenario.horasMaximasDormir,
+    "felicidadDormirMal": escenario.felicidadDormirMal,
+    "felicidadDormirBien": escenario.felicidadDormirBien,
     
+    # Acción: Entrenar
     "energiaEntrenar": escenario.energiaEntrenar,
     "tiempoEntrenar": escenario.tiempoEntrenar,
     "cuotaGimnasio": escenario.cuotaGimnasio,
+    "felicidadEntrenar": escenario.felicidadEntrenar,
     "aumentoEnergiaMaxEntrenar": escenario.aumentoEnergiaMaxEntrenar,
-    "aumentoFelicidadEntrenar": escenario.aumentoFelicidadEntrenar
+
+    # Acción: Compra lujosa
+    "costeLujo": escenario.costeLujo,
+    "felicidadLujo": escenario.felicidadLujo,
+    "tiempoLujo": escenario.tiempoLujo,
+
+    # Acción: Ocio
+    "energiaOcio": escenario.energiaOcio,
+    "tiempoOcio": escenario.tiempoOcio,
+    "costeOcio": escenario.costeOcio,
+    "felicidadOcio": escenario.felicidadOcio,
+
+    # Acción: Comida basura
+    "energiaComidaBasura": escenario.energiaComidaBasura,
+    "felicidadComidaBasura": escenario.felicidadComidaBasura,
+    "tiempoComidaBasura": escenario.tiempoComidaBasura,
+    "porcentajeAhorro": escenario.porcentajeAhorro,
+    "reduccionEnergiaMaxComidaBasura": escenario.reduccionEnergiaMaxComidaBasura,
+
+    # Parámetros Laborales (Trabajadores)
+    "sueldoMedio": escenario.sueldoMedio,
+    "diasLaborablesSemanales": escenario.diasLaborablesSemanales,
+    "diasLaborablesAlMes": escenario.diasLaborablesAlMes,
+    "tiempoTrabajo": escenario.tiempoTrabajo,
+    "maxTiempoAlTrabajo": escenario.maxTiempoAlTrabajo,
+    "energiaTrabajar": escenario.energiaTrabajar,
+    "felicidadTrabajar": escenario.felicidadTrabajar,
+    "reduccionEnergiaMaxDobleTrabajo": escenario.reduccionEnergiaMaxDobleTrabajo,
+    "porcentajeSueldoTeletrabajo": escenario.porcentajeSueldoTeletrabajo,
+    "porcentajeEnergiaTeletrabajo": escenario.porcentajeEnergiaTeletrabajo,
+    
+    # Interacción Social
+    "umbralContagiarFelicidad": escenario.umbralContagiarFelicidad,
+    "felicidadContagiarTrabajador": escenario.felicidadContagiarTrabajador
 }
 
 # Instanciamos el modelo. Es vital para el correcto funcionamiento que el nombre de los parámetros que se pasen sea el mismo que el nombre de la variable que los recibe
