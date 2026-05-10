@@ -131,11 +131,25 @@ class EscenarioSociedad(Scenario):
 
     
     #Contagiar Felicidad (si está feliz, hace más feliz a la gente que tiene cerca)
-    umbralContagiarFelicidad: int = 90             #A partir de qué punto contiaga la felicidad a sus vecinos
-    felicidadContagiarTrabajador: float = 0.5           #Cantidad de felicidad que aporta a sus vecinos
+    umbralContagiarFelicidadT: int = 90             #A partir de qué punto contiaga la felicidad a sus vecinos
+    felicidadContagiarT: float = 0.5           #Cantidad de felicidad que aporta a sus vecinos
 
 
     #Parámetros de las acciones de los empresarios:
+    #Invertir
+    tiempoInvertir: float = 2                  #2 horas
+    energiaInvertir: int = -5
+    felicidadInvertir: float = 1               #Sumamos un poco de felicidad ya que, aunque gana dinero, es un poco estresante
+    porcentajeDineroInvertir = 0.01     #Aumenta su patrimonio en un 1%
+
+    #Bonificación Monetaria
+    umbralFelicidadBonificacionMonetaria: float = 50        #Dar recompensas monetarias a los Trabajadores que sólo tengan menos de una cierta cantidad de felicidad
+    dineroPorTrabajadorBonificacion: int = 100                          #Cantidad de dinero que gana el Trabajador (y el que pierde el empresario)
+    aumentoFelicidadTrabajadorBonificacion = 10
+
+    #Contagiar Felicidad pasivamente
+    umbralContagiarFelicidadE: int = 90
+    felicidadContagiarE: float = 1          #Cantidad de felicidad que le da a los trabajadores cercanos
 
 
     #Parámetros de las acciones de los antisistema:

@@ -5,7 +5,7 @@ gashfd
 
 #Importamos la clase con el agente por defecto de Mesa
 import mesa
-from mesa.discrete_space import Cell 
+from mesa.discrete_space import Cell
 
 from metricas import *
 

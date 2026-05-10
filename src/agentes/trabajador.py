@@ -42,11 +42,11 @@ class Trabajador(AgenteBase):
     def contagiarFelicidadTrabajador(self):
         '''Método que, en caso de que un Trabajador esté contento, pone de mejor humor a los demás agentes que tenga cerca. No es una acción, simplemente ocurre de manera pasiva en cada step'''
         #Si está suficientemente feliz, contagia a los demás
-        if self.felicidad >= self.scenario.umbralContagiarFelicidad:
+        if self.felicidad >= self.scenario.umbralContagiarFelicidadT:
             
             #Recorremos cada agente y le aumentamos su felicidad
             for agente in self.vecindario.agents:
-                agente.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadContagiarTrabajador)
+                agente.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadContagiarT)
 
 
     #Acciones que sólo pueden realizar los Trabajadores
