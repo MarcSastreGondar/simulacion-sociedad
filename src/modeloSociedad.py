@@ -144,8 +144,9 @@ class EscenarioSociedad(Scenario):
 
     #Bonificación Monetaria
     umbralFelicidadBonificacionMonetaria: float = 50        #Dar recompensas monetarias a los Trabajadores que sólo tengan menos de una cierta cantidad de felicidad
-    dineroPorTrabajadorBonificacion: int = 100                          #Cantidad de dinero que gana el Trabajador (y el que pierde el empresario)
-    aumentoFelicidadTrabajadorBonificacion = 10
+    dineroPorTrabajadorBonificacion: int = 100              #Cantidad de dinero que gana el Trabajador (y el que pierde el empresario)
+    aumentoFelicidadTrabajadorBonificacion: float = 10
+    tiempoBonificacion: float = 1.0                         #1 hora
 
     #Contagiar Felicidad pasivamente
     umbralContagiarFelicidadE: int = 90
@@ -153,6 +154,9 @@ class EscenarioSociedad(Scenario):
 
 
     #Parámetros de las acciones de los antisistema:
+    #Robar
+    porcentajeDineroRobado: int = 0.2
+
     
 
 # Función auxiliar para poder recolectar los datos de manera segura sin que haya errores

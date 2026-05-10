@@ -33,6 +33,22 @@ class Empresario(AgenteBase):
 
 
     #Acciones que sólo pueden realizar los Empresarios
+    def invertir(self):
+        '''Método con el que el empresario invierte y gana un porcentaje de su dinero'''
+        
+        #Si tiene el tiempo y la energía para invertir, lo hace
+        if self.comprobarEnergiaTiempoDinero(tiempo=self.scenario.tiempoInvertir, energia=self.scenario.energiaInvertir):
+
+            aumentoDinero = self.scenario.porcentajeDineroInvertir * self.dinero        #El dinero que consigue dependrá del dinero que ya tenga el Empresario
+            self.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadInvertir, energia=self.scenario.energiaInvertir, dinero=aumentoDinero)
+            self.ocupar(self.scenario.tiempoInvertir)
+            return True
+        
+        return False
+
+
+
+
     def bonificacionMonetaria(self):
         '''Método en el que un Empresario da una bonificación monetaria a los Trabajadores cercanos para ponelos de mejor humor. O les paga a todos o a ninguno'''
         
@@ -52,7 +68,8 @@ class Empresario(AgenteBase):
 
             if self.comprobarEnergiaTiempoDinero(dinero=dineroTotalGastar):
                 #En caso de tener dinero suficiente, el empresario lo gasta en bonificarles
-                self.modificarEnergiaFelicidadDinero(dinero=dineroTotalGastar)      #El empresario usa el dinero
+                self.modificarEnergiaFelicidadDinero(dinero=dineroTotalGastar)      #El empresario usa el dinero y el tiempo
+                self.ocupar(self.scenario.tiempoBonificacion)
 
                 #Recorremos cada agente para darles el dinero a cada uno
                 for agente in trabajadoresBeneficiados:
