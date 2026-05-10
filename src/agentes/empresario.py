@@ -24,8 +24,6 @@ class Empresario(AgenteBase):
         self.actualizar_vecinos()
         self.move()
 
-        if self.felicidad > 0:
-            self.felicidad += 1
         self.actualizarDepresion()
 
 

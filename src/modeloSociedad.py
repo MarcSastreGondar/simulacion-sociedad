@@ -141,6 +141,15 @@ class EscenarioSociedad(Scenario):
     #Parámetros de las acciones de los antisistema:
     
 
+# Función auxiliar para poder recolectar los datos de manera segura sin que haya errores
+def media_segura(agentes, atributo):
+    #Si no hay agentes de este tipo, se devuelve una media de 0
+    if len(agentes) == 0:
+        return 0.0 
+    
+    #Si hay agentes sobre los que calcular la media, simplemente se calcula
+    return agentes.agg(atributo, np.mean)
+
 '''Modelo principal de la simulación'''
 class ModeloSociedad(mesa.Model):    
     
@@ -190,14 +199,34 @@ class ModeloSociedad(mesa.Model):
         
         
         #Inicializamos el data collector para que recoja los datos durante la ejecución
-        #Datos recogidos del modelo en general
+        #Datos recogidos del modelo
         model_reporters={
-            "Felicidad_Media": lambda m: m.agents.agg("felicidad", np.mean)
+            # Gráficos generales
+            "Felicidad Media": lambda m: media_segura(m.agents, "felicidad"),
+            "Energia Media": lambda m: media_segura(m.agents, "energia"),
+            "Dinero Medio": lambda m: media_segura(m.agents, "dinero"),
+
+            # Específicos de Trabajadores con chequeo de existencia
+            "Felicidad Media Trabajadores": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Trabajador"), "felicidad"),
+            "Energia Media Trabajadores": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Trabajador"), "energia"),
+            "Dinero Medio Trabajadores": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Trabajador"), "dinero"),
+
+            # Específicos de Empresarios
+            "Felicidad Media Empresarios": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Empresario"), "felicidad"),
+            "Energia Media Empresarios": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Empresario"), "energia"),
+            "Dinero Medio Empresarios": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Empresario"), "dinero"),
+
+            # Específicos de Antisistemas
+            "Felicidad Media Antisistema": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Antisistema"), "felicidad"),
+            "Energia Media Antisistema": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Antisistema"), "energia"),
+            "Dinero Medio Antisistema": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Antisistema"), "dinero")
         }
             
         #Datos recogidos de cada agente
         agent_reporters={
-            "Felicidad": "felicidad"
+            "Felicidad": "felicidad",
+            "Energia": "energia",
+            "Dinero": "dinero"
         }
 
         #Creamos los eventos que ocurrirán periódicamente durante la ejecución
@@ -220,7 +249,6 @@ class ModeloSociedad(mesa.Model):
         self.datacollector.collect(self)
 
 
-
     def cambioDia(self):
         '''Método que determina si han pasado 24 horas (steps) para empezar un nuevo día. Empieza los eventos diarios propios de los agentes'''
         #Llamamos al método que se encarga de las modificaciones diarias propias de todos los agentes
@@ -240,8 +268,16 @@ class ModeloSociedad(mesa.Model):
     '''Paso de tiempo de toda la simulación'''
     def step(self):        
 
-        # Ejecutamos el step() de todos los agentes en orden aleatorio.
-        self.agents.shuffle_do("step")
+        #Antes de iniciar los steps, comprobamos que quedan agentes vivos
+        if len(self.agents) > 0:
+            # Ejecutamos el step() de todos los agentes en orden aleatorio.
+            self.agents.shuffle_do("step")
 
-        #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
-        self.datacollector.collect(self)        
+            #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
+            #if self.steps % 20 == 0:
+            self.datacollector.collect(self)
+
+        else:
+            print("ENTRA AQUÍ??")
+            #Si no quedan agentes, paramos la ejecución
+            self.running = False

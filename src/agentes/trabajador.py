@@ -31,6 +31,10 @@ class Trabajador(AgenteBase):
         parteAleatoria = int(self.aleat.uniform(-parteAleatoria, parteAleatoria))     #Añadimos aleatoriedad en el sueldo
         sueldoMensual = self.scenario.sueldoMedio + parteAleatoria
         self.dineroDiaTrabajo = sueldoMensual / self.scenario.diasLaborablesAlMes
+
+
+        #Inicializamos el contador de días que tiene que trabajar esta semana
+        self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
         
 
 

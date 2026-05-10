@@ -78,7 +78,12 @@ class AgenteBase(mesa.discrete_space.CellAgent):
     def eliminarAgente(self):
         '''Método que elimina permanentemente de la simulación a un agente. Es equivalente a la muerte de una persona y 
            los agentes deben intentar evitarla a toda costa'''
-        self.remove()
+        #Si es el último agente vivo, en vez de borrarlo, simplemente paramos la simulación
+        if len(self.model.agents) == 1:
+            print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
+            self.model.running = False
+        else:
+            self.remove()
 
 
     #Métodos auxiliares para modificar los recursos de los agentes de manera controlada
@@ -99,7 +104,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
     def comprobarEnergiaTiempoDinero(self, energia=None, tiempo=None, dinero=None):
         '''Método principal para comprobar si el agente puede realizar una acción. Comprueba si el agente tiene los recursos necesarios para realizar una cierta acción'''
         #Si el agente tiene igual o más energía de la necesaria y más o igual tiempo disponible que los que requieren la acción, devolvemos true
-        if (self.energia >= abs(energia) or energia is None) and (self.tiempoDisponible >= tiempo or tiempo is None) and (self.dinero >= abs(dinero) or dinero is None):
+        if (energia is None or self.energia >= abs(energia)) and (tiempo is None or self.tiempoDisponible >= tiempo) and (dinero is None or self.dinero >= abs(dinero)):
             return True
         else:
             return False
@@ -328,7 +333,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             self.tiempoMensualidadGym -= 1
 
         reduccionFelicidad = self.scenario.reduccionDiariaFelicidad             #Cojemos la cantidad de felicidad que pierde un agente cada día de manera pasiva
-        
+
         self.gastosCuotidianos = self.calcularGastosCuotidianos()               #Realizamos los gastos cuotidianos del agente y los guardamos por si es necesario calcular el ahorro sobre estos en algún otro momento del día      
 
         self.modificarEnergiaFelicidadDinero(felicidad=reduccionFelicidad, dinero=self.gastosCuotidianos)
