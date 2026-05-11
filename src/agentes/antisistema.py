@@ -22,12 +22,9 @@ class Antisistema(AgenteBase):
 
 
     #Métodos auxiliares
-    def elegirAgentes(self):        #####NECESSARI???
-        '''Método para elegir un vecino al que realizarle una acción'''
-
     def actualizarOdioSocial(self):
         '''Método que sirve para comprobar si el Antisistema es demasiado odiado, en cuyo caso es expulsado de la sociedad'''
-        if self.odioSocial > self.scenario.maxOdio:
+        if self.odioSocial > self.scenario.odioMaximo:
             self.eliminarAgente()
 
     def modificarOdioSocial(self, odio):
@@ -41,10 +38,45 @@ class Antisistema(AgenteBase):
         elif self.odioSocial < 0:
             self.odioSocial = 0
 
+    def contagiarOdio(self):
+        #Si no está suficientemente feliz, contagia a los demás
+        if self.felicidad <= self.scenario.umbralContagiarOdio:
+            self.modificarVecinos(felicidad=self.scenario.felicidadContagiarA)      #Felicidad negativa
+
 
     #Acciones
-    def atracar(self):#####
-        '''Acción que representa que el Antisistema atraca a otro agente'''
+    def atracar(self):
+        '''Acción que representa que el Antisistema atraca a otro agente. Intenta robar a 1 Empresario, si no puede, intenta robar a un Trabajador'''
+        #Comprobamos si el Antisistema tiene recursos suficientes para realizar la acción
+        if self.energia >= self.scenario.energiaAtracar:
+
+            #Obtenemos los Empresarios que puedan ser víctimas del atraco
+            victimasPosibles = self.modificarVecinos(tipo="Empresario")
+
+            #En caso de que no haya Empresarios, intentamos atracar a un Trabajador
+            if len(victimasPosibles) <= 0:
+                victimasPosibles = self.modificarVecinos(tipo="Trabajador")
+
+            #Si hay Empresarios o Trabajadores cerca (con prioridad de los Empresarios), simplemente atracamos a uno cualquiera
+            if len(victimasPosibles) > 0:
+
+                indiceAleat = self.aleat.integers(0, len(victimasPosibles))
+                victima = victimasPosibles[indiceAleat]
+                dineroRobado = victima.dinero * self.scenario.porcentajeDineroRobado
+
+                #Gastamos los recursos de la Víctima
+                victima.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadAtracado, dinero=((-1) * dineroRobado))    #Multiplicamos por -1 para que le suponga un gasto
+
+                #Modificamos los recursos del Antisistema
+                self.modificarEnergiaFelicidadDinero(energia=self.scenario.energiaAtracar, felicidad=self.scenario.felicidadAtracar, dinero=dineroRobado)
+                self.ocupar(self.scenario.tiempoAtracar)
+                self.modificarOdioSocial(self.scenario.odioAtracar)
+                
+                return True
+        #Si no se ha podido atracar a nadie, se devuelve False
+        return False
+
+
     
 
     def quejarse(self):
@@ -63,37 +95,41 @@ class Antisistema(AgenteBase):
     def vandalismo(self):
         '''Acción de romper, pintar o ensuciar propiedades de Empresarios con el fin de tener un impacto negativo sobre estos'''
         #Obtenemos la cantidad de empresarios a los que puede vandalizar
-        cantEmpresariosVandalizados = self.modificarVecinos(tipo="Empresario")      #Sólo recoje el contador
+        empresariosVandalizados = self.modificarVecinos(tipo="Empresario")      #Recojemos los empresarios que serán vandalizados
+        cantEmpresarios = len(empresariosVandalizados)
         
-        while cantEmpresariosVandalizados > 0:
+        while cantEmpresarios > 0:
 
             #Calculamos los recursos necesarios para vandalizar a esta cantidad de empresarios
-            energiaReal = cantEmpresariosVandalizados * self.scenario.energiaVandalismo
-            tiempoReal = cantEmpresariosVandalizados * self.scenario.tiempoVandalismo
-            costeReal = cantEmpresariosVandalizados * self.scenario.dineroVandalismo
+            energiaReal = cantEmpresarios * self.scenario.energiaVandalismo
+            tiempoReal = cantEmpresarios * self.scenario.tiempoVandalismo
+            costeReal = cantEmpresarios * self.scenario.dineroVandalismo
             
-            #Si tiene recursos suficientes, realiza la acción            
+            #Si tiene recursos suficientes, realiza la acción y salimos del bucle            
             if self.comprobarEnergiaTiempoDinero(energia=energiaReal, tiempo=tiempoReal, dinero= costeReal):
 
-                self.modificarVecinos(tipo="Empresario", felicidad=self.scenario.felicidadVandalismoEmpresario, dinero=self.scenario.dineroVandalismoEmpresario)
+                self.modificarVecinos(cantidad=cantEmpresarios, tipo="Empresario", felicidad=self.scenario.felicidadVandalismoEmpresario, dinero=self.scenario.dineroVandalismoEmpresario)
 
                 #Actualizamos los recursos del Antisistema
                 self.modificarEnergiaFelicidadDinero(energia=energiaReal, felicidad=self.scenario.felicidadVandalismo, dinero=costeReal)
                 self.ocupar(tiempoReal)
                 self.modificarOdioSocial(self.scenario.odioVandalismo)
 
-                ACABAR BUCLE
+                break
             else:
                 #Si no tiene recursos suficientes, intenta vandalizar a 1 empresario menos
-                cantEmpresariosVandalizados -= 1
+                cantEmpresarios -= 1
         
 
     def step(self):
+        #Comprobamos si el agente es demasiado odiado
         self.actualizarOdioSocial()
+
         self.actualizarVecinos()
         self.move()
 
-        self.actualizarDepresion()
+        #Antes de acabar el paso, si no está feliz, contagia su infelicidad a los agentes cercanos
+        self.contagiarOdio()
 
 
     def avanceDiarioEspecifico(self):
@@ -101,6 +137,7 @@ class Antisistema(AgenteBase):
 
     def avanceSemanalEspecifico(self):
         '''Método que simula el paso de una semana a otra para los Antisistema'''
+        self.modificarOdioSocial(self.scenario.reduccionPasivaOdio)
 
     def elegirAccion(self):
         """Método que define qué acciones puede tomar un Antisistema en un cierto momento"""

@@ -56,17 +56,18 @@ class EscenarioSociedad(Scenario):
     movimientoAgente: int = 1
 
 
-    #Cambios diarios en los recursos de los agentes
+    #Cambios temporales en los recursos de los agentes
     reduccionDiariaFelicidad: int = -2          #Cada día se reduce en 2 la felicidad del agente
 
     porcentajeGastosCuotidianos: float = 0.01   #Gastan un 1% de su dinero en gastos cuotidianos, con un máximo y mínimo
     gastosDiariosMin: int = -10                 #Dinero que se gasta cada día en cosas cuotidianas
     gastosDiariosMax: int = -30
 
-    # Parámetros de configuración de agentes específicos
+    # Parámetros de configuración de agentes específicos y modificaciones temporales de sus recursos
     #Trabajador
     dineroInicialT: int = 500
     felicidadInicialT: float = 85
+    sueldoMinimo: int = 600
     sueldoMedio: int = 1500                 #Dinero de 1 sueldo completo al mes.
     diasLaborablesSemanales: int = 5        #Cantidad de días que trabajarán cada semana (no podrán trabajar ni más ni menos)
     diasLaborablesAlMes: int = 22           #Suponemos que trabajan, de media, 22 días al mes
@@ -80,9 +81,11 @@ class EscenarioSociedad(Scenario):
     felicidadInicialA: float = 50
     odioMaximo: int = 100
 
+    reduccionPasivaOdio: int = -5
+
 
     #Parámetros de configuración necesarios de las acciones que pueden realizar los agentes:
-    #Parámetros comunes entre todos los agentes:
+    #Acciones comunes para todos los agentes:
     #Dormir
     horasMinimasDormir: float = 4.0
     horasMaximasDormir: float = 8.0
@@ -130,9 +133,9 @@ class EscenarioSociedad(Scenario):
     porcentajeEnergiaTeletrabajo: float = 0.6           #Porcentaje de la energia gastada en el trabajo (si es < 1, se usa menos teletrabajando)
 
     
-    #Contagiar Felicidad (si está feliz, hace más feliz a la gente que tiene cerca)
+    #Contagiar Felicidad pasivamente
     umbralContagiarFelicidadT: int = 90             #A partir de qué punto contiaga la felicidad a sus vecinos
-    felicidadContagiarT: float = 0.5           #Cantidad de felicidad que aporta a sus vecinos
+    felicidadContagiarT: float = 0.5                #Cantidad de felicidad que aporta a sus vecinos
 
 
     #Parámetros de las acciones de los empresarios:
@@ -140,7 +143,7 @@ class EscenarioSociedad(Scenario):
     tiempoInvertir: float = 2                  #2 horas
     energiaInvertir: int = -5
     felicidadInvertir: float = 1               #Sumamos un poco de felicidad ya que, aunque gana dinero, es un poco estresante
-    porcentajeDineroInvertir = 0.01     #Aumenta su patrimonio en un 1%
+    porcentajeDineroInvertir: float = 0.01     #Aumenta su patrimonio en un 1%
 
     #Bonificación Monetaria
     umbralFelicidadBonificacionMonetaria: float = 50        #Dar recompensas monetarias a los Trabajadores que sólo tengan menos de una cierta cantidad de felicidad
@@ -155,11 +158,12 @@ class EscenarioSociedad(Scenario):
 
     #Parámetros de las acciones de los antisistema:
     #Robar
-    porcentajeDineroRobado: float = 0.1             #Porcentaje del dinero que le es robado al agente y que recibe el Antisistema
-    odioRobar: int = 20                             #Cantidad de odio que gana el antisistema
+    porcentajeDineroRobado: float = 0.1                 #Porcentaje del dinero que le es robado al agente y que recibe el Antisistema
     felicidadAtracado: float = -10                   
-    tiempoRobar: float = 1.5
-    energiaRobar: int = -5
+    tiempoAtracar: float = 1.5
+    energiaAtracar: int = -5
+    felicidadAtracar: float = 2
+    odioAtracar: int = 20                               #Cantidad de odio que gana el antisistema
 
     #Quejarse
     felicidadQuejarse: float = -1             #Felicidad que pierde el antisistema al quejarse

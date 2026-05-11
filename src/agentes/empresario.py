@@ -80,7 +80,8 @@ class Empresario(AgenteBase):
         self.actualizarVecinos()
         self.move()
 
-        self.actualizarDepresion()
+        #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los Trabajadores cercanos
+        self.contagiarFelicidadEmpresario()
 
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Empresarios'''

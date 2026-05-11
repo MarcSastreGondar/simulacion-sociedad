@@ -167,34 +167,34 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
 
     def modificarVecinos(self, tipo=None, energia=None, felicidad=None, dinero=None, tiempo=None):
-        '''Método para modificar recursos de todos los vecinos de un Agente, pudiéndose filtrar por tipo. Devuelve la cantidad de agentes afectados.
+        '''Método para modificar recursos de todos los vecinos de un Agente, pudiéndose filtrar por tipo. Devuelve una lista con los agentes afectados.
            Se supone que los agentes vecinos están obligados a gastar sus recursos (consecuencias inevitables de los actos de otro agente)'''
-        cantAgentesAfectados = 0
+        agentesAfectados = []
         
-        #Recorremos cada agente.
+        #Recorremos cada agente
         for agente in self.vecindario.agents:
-
             #Si han introducido un filtro por tipo, nos aseguramos de que sea de ese tipo
             if tipo is not None:
-                if agente.tipo == tipo:                  
+                if agente.tipo == tipo:  
+
                     #Se les pasan los valores directamente ya que modificarEnergiaFelicidadDinero ya gestiona posibles nulos  
                     agente.modificarEnergiaFelicidadDinero(energia=energia, felicidad=felicidad, dinero=dinero)
 
                     #Comprobamos si debe modificarse el tiempo
                     if tiempo is not None:
                         agente.ocupar(tiempo)
-                    
-                    cantAgentesAfectados += 1
+
+                    agentesAfectados.append(agente)
 
             else:   #Si no hay filtro por tipo, simplemente modificamos cualquier agente
                 agente.modificarEnergiaFelicidadDinero(energia=energia, felicidad=felicidad, dinero=dinero)
-                    
+
                 if tiempo is not None:
                     agente.ocupar(tiempo)
-                
-                cantAgentesAfectados += 1
+
+                agentesAfectados.append(agente)
         
-        return cantAgentesAfectados
+        return agentesAfectados
 
 
     def estaDisponible(self):

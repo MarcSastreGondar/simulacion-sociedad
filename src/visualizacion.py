@@ -87,56 +87,48 @@ model_params = {
     "umbralDepresion": escenario.umbralDepresion,
     "mesesSuicidio": escenario.mesesSuicidio,
     "movimientoAgente": escenario.movimientoAgente,
-    
-    # Cambios diarios y gastos
     "reduccionDiariaFelicidad": escenario.reduccionDiariaFelicidad,
     "porcentajeGastosCuotidianos": escenario.porcentajeGastosCuotidianos,
     "gastosDiariosMin": escenario.gastosDiariosMin,
     "gastosDiariosMax": escenario.gastosDiariosMax,
 
-    # Configuración específica por tipo de agente
     "dineroInicialT": escenario.dineroInicialT,
     "felicidadInicialT": escenario.felicidadInicialT,
+    "sueldoMinimo": escenario.sueldoMinimo,
+    "sueldoMedio": escenario.sueldoMedio,
+    "diasLaborablesSemanales": escenario.diasLaborablesSemanales,
+    "diasLaborablesAlMes": escenario.diasLaborablesAlMes,
+    
     "dineroInicialE": escenario.dineroInicialE,
     "felicidadInicialE": escenario.felicidadInicialE,
+    
     "dineroInicialA": escenario.dineroInicialA,
     "felicidadInicialA": escenario.felicidadInicialA,
+    "odioMaximo": escenario.odioMaximo,
+    "reduccionPasivaOdio": escenario.reduccionPasivaOdio,
 
-    # Acción: Dormir
     "horasMinimasDormir": escenario.horasMinimasDormir,
     "horasMaximasDormir": escenario.horasMaximasDormir,
     "felicidadDormirMal": escenario.felicidadDormirMal,
     "felicidadDormirBien": escenario.felicidadDormirBien,
-    
-    # Acción: Entrenar
     "energiaEntrenar": escenario.energiaEntrenar,
     "tiempoEntrenar": escenario.tiempoEntrenar,
     "cuotaGimnasio": escenario.cuotaGimnasio,
     "felicidadEntrenar": escenario.felicidadEntrenar,
     "aumentoEnergiaMaxEntrenar": escenario.aumentoEnergiaMaxEntrenar,
-
-    # Acción: Compra lujosa
     "costeLujo": escenario.costeLujo,
     "felicidadLujo": escenario.felicidadLujo,
     "tiempoLujo": escenario.tiempoLujo,
-
-    # Acción: Ocio
     "energiaOcio": escenario.energiaOcio,
     "tiempoOcio": escenario.tiempoOcio,
     "costeOcio": escenario.costeOcio,
     "felicidadOcio": escenario.felicidadOcio,
-
-    # Acción: Comida basura
     "energiaComidaBasura": escenario.energiaComidaBasura,
     "felicidadComidaBasura": escenario.felicidadComidaBasura,
     "tiempoComidaBasura": escenario.tiempoComidaBasura,
     "porcentajeAhorro": escenario.porcentajeAhorro,
     "reduccionEnergiaMaxComidaBasura": escenario.reduccionEnergiaMaxComidaBasura,
 
-    # Parámetros Laborales (Trabajadores)
-    "sueldoMedio": escenario.sueldoMedio,
-    "diasLaborablesSemanales": escenario.diasLaborablesSemanales,
-    "diasLaborablesAlMes": escenario.diasLaborablesAlMes,
     "tiempoTrabajo": escenario.tiempoTrabajo,
     "maxTiempoAlTrabajo": escenario.maxTiempoAlTrabajo,
     "energiaTrabajar": escenario.energiaTrabajar,
@@ -144,10 +136,39 @@ model_params = {
     "reduccionEnergiaMaxDobleTrabajo": escenario.reduccionEnergiaMaxDobleTrabajo,
     "porcentajeSueldoTeletrabajo": escenario.porcentajeSueldoTeletrabajo,
     "porcentajeEnergiaTeletrabajo": escenario.porcentajeEnergiaTeletrabajo,
-    
-    # Interacción Social
-    "umbralContagiarFelicidad": escenario.umbralContagiarFelicidad,
-    "felicidadContagiarTrabajador": escenario.felicidadContagiarTrabajador
+    "umbralContagiarFelicidadT": escenario.umbralContagiarFelicidadT,
+    "felicidadContagiarT": escenario.felicidadContagiarT,
+
+    "tiempoInvertir": escenario.tiempoInvertir,
+    "energiaInvertir": escenario.energiaInvertir,
+    "felicidadInvertir": escenario.felicidadInvertir,
+    "porcentajeDineroInvertir": escenario.porcentajeDineroInvertir,
+    "umbralFelicidadBonificacionMonetaria": escenario.umbralFelicidadBonificacionMonetaria,
+    "dineroPorTrabajadorBonificacion": escenario.dineroPorTrabajadorBonificacion,
+    "aumentoFelicidadTrabajadorBonificacion": escenario.aumentoFelicidadTrabajadorBonificacion,
+    "tiempoBonificacion": escenario.tiempoBonificacion,
+    "umbralContagiarFelicidadE": escenario.umbralContagiarFelicidadE,
+    "felicidadContagiarE": escenario.felicidadContagiarE,
+
+    "porcentajeDineroRobado": escenario.porcentajeDineroRobado,
+    "felicidadAtracado": escenario.felicidadAtracado,
+    "tiempoAtracar": escenario.tiempoAtracar,
+    "energiaAtracar": escenario.energiaAtracar,
+    "felicidadAtracar": escenario.felicidadAtracar,
+    "odioAtracar": escenario.odioAtracar,
+    "felicidadQuejarse": escenario.felicidadQuejarse,
+    "felicidadQuejarseReceptor": escenario.felicidadQuejarseReceptor,
+    "energiaQuejarse": escenario.energiaQuejarse,
+    "tiempoQuejarse": escenario.tiempoQuejarse,
+    "felicidadVandalismo": escenario.felicidadVandalismo,
+    "energiaVandalismo": escenario.energiaVandalismo,
+    "dineroVandalismo": escenario.dineroVandalismo,
+    "tiempoVandalismo": escenario.tiempoVandalismo,
+    "odioVandalismo": escenario.odioVandalismo,
+    "felicidadVandalismoEmpresario": escenario.felicidadVandalismoEmpresario,
+    "dineroVandalismoEmpresario": escenario.dineroVandalismoEmpresario,
+    "umbralContagiarOdio": escenario.umbralContagiarOdio,
+    "felicidadContagiarA": escenario.felicidadContagiarA
 }
 
 

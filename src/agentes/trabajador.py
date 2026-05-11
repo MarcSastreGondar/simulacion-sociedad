@@ -27,11 +27,12 @@ class Trabajador(AgenteBase):
 
 
         #Obtenemos la cantidad de dinero que obtiene el agente después de un día estándar presencial en el trabajo (para no recalcularlo cada vez)
-        parteAleatoria = self.porcentajeAleatorio * self.scenario.sueldoMedio
-        parteAleatoria = int(self.aleat.uniform(-parteAleatoria, parteAleatoria))     #Añadimos aleatoriedad en el sueldo
-        sueldoMensual = self.scenario.sueldoMedio + parteAleatoria
-        self.dineroDiaTrabajo = sueldoMensual / self.scenario.diasLaborablesAlMes
+        self.sueldoMensual = self.scenario.sueldoMedio
 
+        #Añadimos una aleatoriedad inicial en el sueldo
+        parteAleatoria = self.porcentajeAleatorio * self.scenario.sueldoMedio
+        parteAleatoria = int(self.aleat.uniform(-parteAleatoria, parteAleatoria))
+        self.modificarSueldoMensual(dinero=parteAleatoria)                              
 
         #Inicializamos el contador de días que tiene que trabajar esta semana
         self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
@@ -45,6 +46,17 @@ class Trabajador(AgenteBase):
         if self.felicidad >= self.scenario.umbralContagiarFelicidadT:
             
             self.modificarVecinos(felicidad=self.scenario.felicidadContagiarT)
+
+    
+    def modificarSueldoMensual(self, dinero):
+        '''Método para aumentar o disminuir el sueldo que cobra cada mes el Trabajador y, por extensión, el que gana por cada día de Trabajo'''
+
+        self.sueldoMensual += dinero
+
+        if self.sueldoMensual < self.scenario.sueldoMinimo:
+            self.sueldoMensual = self.scenario.sueldoMinimo
+
+        self.dineroDiaTrabajo = self.sueldoMensual / self.scenario.diasLaborablesAlMes
 
 
     #Acciones que sólo pueden realizar los Trabajadores
