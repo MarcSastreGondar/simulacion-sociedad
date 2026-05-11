@@ -62,11 +62,9 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
     # Métodos comunes de los agentes
     # Métodos auxiliares
-    def actualizar_vecinos(self):
-        '''
-        Miramos las casillas cercanas al agente
-        '''
-        #Obtenemos los vecinos que tiene el agente alrededor
+    def actualizarVecinos(self):
+        '''Miramos las casillas cercanas al agente y detectamos cuales son sus vecinos. Debería llamarse al principio de cada step para evitar errores'''
+        #Obtenemos los vecinos que tiene el agente alrededor (en su campo visual)
         self.vecindario = self.cell.get_neighborhood(radius=self.visionAgente)
         self.vecinos = self.vecindario.agents
 
@@ -121,7 +119,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
             #Realizamos también comprobación sobre el mínimo en caso de que la acción sea obligatoria
             #Si tiene menos energía de la que es posible, simplemente la ponemos al mínimo
-            if self.energia < 0:
+            elif self.energia < 0:
                 self.energia = 0
 
         #Comprobamos si se ha modificado la felicidad
@@ -133,7 +131,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
                 self.felicidad = self.scenario.felicidadMax
 
             #Si su felicidad supera el mínimo establecido, lo reestablecemos al mínimo posible
-            if self.felicidad < 0:
+            elif self.felicidad < 0:
                 self.felicidad = 0 
         
         #Comprobamos si se ha modificado el dinero
@@ -154,7 +152,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             self.energiaMax = self.scenario.energiaMaxObtenible
 
         #Si su energía mínima está por debajo del mínimo establecido, lo reestablecemos al mínimo posible
-        if self.energiaMax < self.scenario.energiaMinObtenible:
+        elif self.energiaMax < self.scenario.energiaMinObtenible:
             self.energiaMax = self.scenario.energiaMinObtenible
 
 
@@ -166,6 +164,37 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         cantidadTiempo -= 1.0                       #Restamos 1 al tiempo que se mantiene ocupado ya que la primera hora (primer step) ya la invierte al realizar la acción
         self.ocupado += cantidadTiempo              #Agregamos el tiempo que aún le queda por estar parado en otros steps a su contador de ocupado
+
+
+    def modificarVecinos(self, tipo=None, energia=None, felicidad=None, dinero=None, tiempo=None):
+        '''Método para modificar recursos de todos los vecinos de un Agente, pudiéndose filtrar por tipo. Devuelve la cantidad de agentes afectados.
+           Se supone que los agentes vecinos están obligados a gastar sus recursos (consecuencias inevitables de los actos de otro agente)'''
+        cantAgentesAfectados = 0
+        
+        #Recorremos cada agente.
+        for agente in self.vecindario.agents:
+
+            #Si han introducido un filtro por tipo, nos aseguramos de que sea de ese tipo
+            if tipo is not None:
+                if agente.tipo == tipo:                  
+                    #Se les pasan los valores directamente ya que modificarEnergiaFelicidadDinero ya gestiona posibles nulos  
+                    agente.modificarEnergiaFelicidadDinero(energia=energia, felicidad=felicidad, dinero=dinero)
+
+                    #Comprobamos si debe modificarse el tiempo
+                    if tiempo is not None:
+                        agente.ocupar(tiempo)
+                    
+                    cantAgentesAfectados += 1
+
+            else:   #Si no hay filtro por tipo, simplemente modificamos cualquier agente
+                agente.modificarEnergiaFelicidadDinero(energia=energia, felicidad=felicidad, dinero=dinero)
+                    
+                if tiempo is not None:
+                    agente.ocupar(tiempo)
+                
+                cantAgentesAfectados += 1
+        
+        return cantAgentesAfectados
 
 
     def estaDisponible(self):

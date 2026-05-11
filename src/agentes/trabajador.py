@@ -44,9 +44,7 @@ class Trabajador(AgenteBase):
         #Si está suficientemente feliz, contagia a los demás
         if self.felicidad >= self.scenario.umbralContagiarFelicidadT:
             
-            #Recorremos cada agente y le aumentamos su felicidad
-            for agente in self.vecindario.agents:
-                agente.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadContagiarT)
+            self.modificarVecinos(felicidad=self.scenario.felicidadContagiarT)
 
 
     #Acciones que sólo pueden realizar los Trabajadores
@@ -133,7 +131,7 @@ class Trabajador(AgenteBase):
     def step(self):
         '''Definimos lo que puede hacer cada agente en su tiempo libre'''
 
-        self.actualizar_vecinos()
+        self.actualizarVecinos()
 
         #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
         if self.estaDisponible():            

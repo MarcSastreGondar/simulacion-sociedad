@@ -25,11 +25,8 @@ class Empresario(AgenteBase):
         '''Método que, en caso de que un Empresario esté contento, pone de mejor humor a los demás Trabajadores que tenga cerca. No es una acción, simplemente ocurre de manera pasiva en cada step'''
         #Si está suficientemente feliz, contagia a los demás Trabajadores
         if self.felicidad >= self.scenario.umbralContagiarFelicidadE:
-            
-            #Recorremos cada agente y le aumentamos su felicidad si es un Trabajador
-            for agente in self.vecindario.agents:
-                if agente.tipo == "Trabajador":
-                    agente.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadContagiarE)
+
+            self.modificarVecinos(tipo="Trabajador", felicidad=self.scenario.felicidadContagiarE)
 
 
     #Acciones que sólo pueden realizar los Empresarios
@@ -45,8 +42,6 @@ class Empresario(AgenteBase):
             return True
         
         return False
-
-
 
 
     def bonificacionMonetaria(self):
@@ -82,7 +77,7 @@ class Empresario(AgenteBase):
 
 
     def step(self):
-        self.actualizar_vecinos()
+        self.actualizarVecinos()
         self.move()
 
         self.actualizarDepresion()

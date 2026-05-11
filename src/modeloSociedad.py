@@ -67,6 +67,9 @@ class EscenarioSociedad(Scenario):
     #Trabajador
     dineroInicialT: int = 500
     felicidadInicialT: float = 85
+    sueldoMedio: int = 1500                 #Dinero de 1 sueldo completo al mes.
+    diasLaborablesSemanales: int = 5        #Cantidad de días que trabajarán cada semana (no podrán trabajar ni más ni menos)
+    diasLaborablesAlMes: int = 22           #Suponemos que trabajan, de media, 22 días al mes
 
     #Empresario
     dineroInicialE: int = 15000
@@ -75,6 +78,7 @@ class EscenarioSociedad(Scenario):
     #Antisistema
     dineroInicialA: int = 50
     felicidadInicialA: float = 50
+    odioMaximo: int = 100
 
 
     #Parámetros de configuración necesarios de las acciones que pueden realizar los agentes:
@@ -112,10 +116,6 @@ class EscenarioSociedad(Scenario):
 
 
     #Parámetros de las acciones de los trabajadores:
-    sueldoMedio: int = 1500                 #Dinero de 1 sueldo completo al mes.
-    diasLaborablesSemanales: int = 5        #Cantidad de días que trabajarán cada semana (no podrán trabajar ni más ni menos)
-    diasLaborablesAlMes: int = 22           #Suponemos que trabajan, de media, 22 días al mes
-
     #Trabajar
     tiempoTrabajo: float = 8.0          #Horas que dedica a trabajar de manera directa
     maxTiempoAlTrabajo: float = 1.5     #Cantidad máxima de tiempo en horas que puede tardar el agente en transportarse al trabajo (ida + vuelta)
@@ -155,7 +155,30 @@ class EscenarioSociedad(Scenario):
 
     #Parámetros de las acciones de los antisistema:
     #Robar
-    porcentajeDineroRobado: int = 0.2
+    porcentajeDineroRobado: float = 0.1             #Porcentaje del dinero que le es robado al agente y que recibe el Antisistema
+    odioRobar: int = 20                             #Cantidad de odio que gana el antisistema
+    felicidadAtracado: float = -10                   
+    tiempoRobar: float = 1.5
+    energiaRobar: int = -5
+
+    #Quejarse
+    felicidadQuejarse: float = -1             #Felicidad que pierde el antisistema al quejarse
+    felicidadQuejarseReceptor: float = -2           #Felicidad que pierden los oyentes al escuchar al antisistema quejarse
+    energiaQuejarse: int = -3
+    tiempoQuejarse: float = 1
+
+    #Vandalismo
+    felicidadVandalismo: float = 3
+    energiaVandalismo: int = -3
+    dineroVandalismo: int = -5                      #Dinero para gastar en material necesario para el vandalismo
+    tiempoVandalismo: float = 1.5                   #1.5 horas por cada Empresario cercano
+    odioVandalismo: int = 5                         #Cantidad de odio que recibe el Antisistema
+    felicidadVandalismoEmpresario: float = -4
+    dineroVandalismoEmpresario: int = -200          #Dinero que pierde el Empresario en reparaciones
+
+    #Contagiar Odio pasivamente
+    umbralContagiarOdio: int = 90
+    felicidadContagiarA: float = -1          #Cantidad de felicidad que le da a los trabajadores cercanos
 
     
 
