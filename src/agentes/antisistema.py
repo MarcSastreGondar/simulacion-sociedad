@@ -107,7 +107,6 @@ class Antisistema(AgenteBase):
             
             #Si tiene recursos suficientes, realiza la acción y salimos del bucle            
             if self.comprobarEnergiaTiempoDinero(energia=energiaReal, tiempo=tiempoReal, dinero= costeReal):
-
                 self.modificarVecinos(cantidad=cantEmpresarios, tipo="Empresario", felicidad=self.scenario.felicidadVandalismoEmpresario, dinero=self.scenario.dineroVandalismoEmpresario)
 
                 #Actualizamos los recursos del Antisistema

@@ -123,7 +123,9 @@ class EscenarioSociedad(Scenario):
     tiempoTrabajo: float = 8.0          #Horas que dedica a trabajar de manera directa
     maxTiempoAlTrabajo: float = 1.5     #Cantidad máxima de tiempo en horas que puede tardar el agente en transportarse al trabajo (ida + vuelta)
     energiaTrabajar: int = -10
+
     felicidadTrabajar: float = -5
+    felicidadMaxTrabajar: float = 0     #Cantidad máxima de felicidad que puede aportarle trabajar
 
     #TrabajoDoble. Son necesarios pocos parámetros porque es simplemente el doble de trabajar
     reduccionEnergiaMaxDobleTrabajo: int = -2
@@ -132,7 +134,12 @@ class EscenarioSociedad(Scenario):
     porcentajeSueldoTeletrabajo: float = 0.8            #Porcentaje del sueldo normal que se cobra en el trabajo (si es < 1, se cobra menos teletrabajando)
     porcentajeEnergiaTeletrabajo: float = 0.6           #Porcentaje de la energia gastada en el trabajo (si es < 1, se usa menos teletrabajando)
 
-    
+    #Estudiar      #######
+    energiaEstudiar: int = -30
+    felicidadEstudiar: float = -5
+    aumentoFelicidadTrabajoEstudiar: float = 1         
+    tiempoEstudiar: float = (24 * 5)                    #5 días
+
     #Contagiar Felicidad pasivamente
     umbralContagiarFelicidadT: int = 90             #A partir de qué punto contiaga la felicidad a sus vecinos
     felicidadContagiarT: float = 0.5                #Cantidad de felicidad que aporta a sus vecinos
@@ -151,9 +158,14 @@ class EscenarioSociedad(Scenario):
     aumentoFelicidadTrabajadorBonificacion: float = 10
     tiempoBonificacion: float = 1.0                         #1 hora
 
+
+    #Generacion Pasiva de Dinero   #####
+    dineroPasivoPorTrabajador: int = 10
+
+
     #Contagiar Felicidad pasivamente
     umbralContagiarFelicidadE: int = 90
-    felicidadContagiarE: float = 1          #Cantidad de felicidad que le da a los trabajadores cercanos
+    felicidadContagiarE: float = 1          #Cantidad de felicidad que le da a los Trabajadores cercanos
 
 
     #Parámetros de las acciones de los antisistema:

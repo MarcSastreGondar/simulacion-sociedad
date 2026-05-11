@@ -36,6 +36,8 @@ class Trabajador(AgenteBase):
 
         #Inicializamos el contador de días que tiene que trabajar esta semana
         self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
+
+        self.  AÑADIR LO DE FELICIDAD POR TRABAJAR Y QUE SE PUEDA MODIFICAR
         
 
 
@@ -111,6 +113,10 @@ class Trabajador(AgenteBase):
         
         #Si no puede realizar la acción, devolvemos False
         return False
+    
+
+    def estudiar(self):
+        '''Acción que simula que el agente estudia durante su tiempo libre y consigue algún tipo de experiencia formativa que le permite optar a un mayor sueldo'''
     
 
 

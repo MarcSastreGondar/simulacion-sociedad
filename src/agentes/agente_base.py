@@ -166,13 +166,18 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.ocupado += cantidadTiempo              #Agregamos el tiempo que aún le queda por estar parado en otros steps a su contador de ocupado
 
 
-    def modificarVecinos(self, tipo=None, energia=None, felicidad=None, dinero=None, tiempo=None):
-        '''Método para modificar recursos de todos los vecinos de un Agente, pudiéndose filtrar por tipo. Devuelve una lista con los agentes afectados.
+    def modificarVecinos(self, cantidadAgentes=None, tipo=None, energia=None, felicidad=None, dinero=None, tiempo=None):
+        '''Método para modificar recursos de todos los vecinos de un Agente, pudiéndose filtrar por tipo y por cantidad de agentes (None = Todos). Devuelve una lista con los agentes afectados.
            Se supone que los agentes vecinos están obligados a gastar sus recursos (consecuencias inevitables de los actos de otro agente)'''
         agentesAfectados = []
-        
+
         #Recorremos cada agente
         for agente in self.vecindario.agents:
+
+            #Si se ha introducido una cantidad de agentes y esta no es un número positivo, dejamos de buscar
+            if (cantidadAgentes is not None) and (cantidadAgentes <= 0):
+                break
+
             #Si han introducido un filtro por tipo, nos aseguramos de que sea de ese tipo
             if tipo is not None:
                 if agente.tipo == tipo:  
@@ -186,6 +191,11 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
                     agentesAfectados.append(agente)
 
+                    #Si hay un límite de agentes, reducimos en 1 los que quedan por buscar
+                    if (cantidadAgentes is not None):
+                        cantidadAgentes -= 1           
+
+
             else:   #Si no hay filtro por tipo, simplemente modificamos cualquier agente
                 agente.modificarEnergiaFelicidadDinero(energia=energia, felicidad=felicidad, dinero=dinero)
 
@@ -193,6 +203,10 @@ class AgenteBase(mesa.discrete_space.CellAgent):
                     agente.ocupar(tiempo)
 
                 agentesAfectados.append(agente)
+
+                #Si hay un límite de agentes, reducimos en 1 los que quedan por buscar
+                if (cantidadAgentes is not None):
+                    cantidadAgentes -= 1  
         
         return agentesAfectados
 
