@@ -7,7 +7,8 @@ venv/
 #Tampoco subimos el archivo de configuración local del VS Code
 .vscode/
 
+#No subimos la carpeta de resultados ya que no es relevante guardar tanta información
+resultados/
+
 #No subimos la carpeta experimental de ejemplo
 Ejemplos/
-
-
