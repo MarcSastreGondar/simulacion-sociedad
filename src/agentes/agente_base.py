@@ -19,7 +19,8 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         #Usamos el mismo RandomNumberGenerator que tiene el modelo
         self.aleat = modelo.rng
         
-        self.tipo = "Ninguno"        
+        self.tipo = "Ninguno"
+        self.estado = "Feliz"        
 
         self.visionAgente = self.scenario.visionAgente
         self.visionMovimiento = self.scenario.movimientoAgente
@@ -76,12 +77,15 @@ class AgenteBase(mesa.discrete_space.CellAgent):
     def eliminarAgente(self):
         '''Método que elimina permanentemente de la simulación a un agente. Es equivalente a la muerte de una persona y 
            los agentes deben intentar evitarla a toda costa'''
+        
         #Si es el último agente vivo, en vez de borrarlo, simplemente paramos la simulación
         if len(self.model.agents) == 1:
             print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
             self.model.running = False
+
         else:
-            self.remove()
+            #Actualizamos su estado a muerto (se eliminará desde el modelo)
+            self.estado = "Muerto"
 
 
     #Métodos auxiliares para modificar los recursos de los agentes de manera controlada
@@ -347,6 +351,8 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         if self.felicidad < self.scenario.umbralDepresion:
             self.diasDepresion += 1
 
+            self.estado = "Deprimido"
+
             #Si lleva demasiado tiempo deprimido, borramos el agente
             if self.diasDepresion >= self.diasSuicidio:
                 self.eliminarAgente()
@@ -354,6 +360,8 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         else:
             #Si no está deprimido, disminuimos sus dias con depresión
             self.diasDepresion -= 3
+
+            self.estado = "Feliz"
 
             #Aseguramos que no sea menor al mínimo
             if self.diasDepresion < 0:

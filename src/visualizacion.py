@@ -7,6 +7,9 @@ from mesa.visualization import (
     make_plot_component,
     Slider
 )
+
+import solara
+
 from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyle
 
 from modeloSociedad import ModeloSociedad, EscenarioSociedad
@@ -51,8 +54,17 @@ def crearRenderizador(modelo) -> SpaceRenderer:
     renderizador.setup_agents(agent_portrayal)                      #Definimos cómo se pintarán los agentes
     renderizador.post_process = post_process                        #Ajustes de los ejes
     renderizador.draw_agents()
+
     return renderizador
 
+
+def botonExportar(modelo):
+    
+    # Definimos el botón de exportación
+    def clickExportarDatos():
+        modelo.exportarDatos()      # Accedemos al modelo que está corriendo actualmente
+
+    return solara.Button(label="Exportar Datos", on_click=clickExportarDatos, color="primary")
 
 # Instanciamos el escenario para obtener los valores por defecto
 escenario = EscenarioSociedad()
@@ -201,7 +213,8 @@ page = SolaraViz(
     modeloSociedad,
     model_params=model_params,
     renderer=crearRenderizador(modeloSociedad),
-    components=[graficoFelicidadMedia, graficoEnergiaMedia, graficoDineroMedio,
+    components=[botonExportar,
+                graficoFelicidadMedia, graficoEnergiaMedia, graficoDineroMedio,
                 graficoFelicidadMediaT, graficoEnergiaMediaT, graficoDineroMedioT,
                 graficoFelicidadMediaE, graficoEnergiaMediaE, graficoDineroMedioE,
                 graficoFelicidadMediaA, graficoEnergiaMediaA, graficoDineroMedioA],

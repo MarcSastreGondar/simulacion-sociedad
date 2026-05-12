@@ -4,6 +4,8 @@
 '''
 gashfd
 '''
+import os
+from datetime import datetime
 
 import mesa
 from mesa.experimental.scenarios import Scenario
@@ -282,11 +284,18 @@ class ModeloSociedad(mesa.Model):
         }
             
         #Datos recogidos de cada agente
-        agent_reporters={
+        agent_reporters = {
+            "Tipo": "tipo",
+            "Estado": "estado",
             "Felicidad": "felicidad",
             "Energia": "energia",
             "Dinero": "dinero"
         }
+
+        #Lo inicializamos
+        self.datacollector = mesa.DataCollector(model_reporters=model_reporters, agent_reporters=agent_reporters)
+        self.datacollector.collect(self)
+
 
         #Creamos los eventos que ocurrirán periódicamente durante la ejecución
         #Paso del tiempo de 1 día
@@ -303,9 +312,47 @@ class ModeloSociedad(mesa.Model):
             Schedule(interval=horasSemana)
         )
 
-        #Lo inicializamos
-        self.datacollector = mesa.DataCollector(model_reporters=model_reporters, agent_reporters=agent_reporters)
-        self.datacollector.collect(self)
+    def exportarDatos(self):
+        '''Método para guardar los datos recolectados durante la simulación en la carpeta de resultados'''
+        if not os.path.exists("../resultados"):
+            os.makedirs("../resultados")
+        
+        # Generamos un nombre basado en la fecha y hora actuales
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Exportamos los datos del modelo
+        model_df = self.datacollector.get_model_vars_dataframe()
+        model_df.to_csv(f"../resultados/sim_{timestamp}_modelo.csv", index_label="Step")
+        
+        # Exportamos los datos de los agentes
+        agent_df = self.datacollector.get_agent_vars_dataframe()
+        agent_df.to_csv(f"../resultados/sim_{timestamp}_agentes.csv")
+        
+        print(f"Datos exportados correctamente como sim_{timestamp}")
+
+
+    def comprobarAgentesMuertos(self):
+        '''Método que analiza todos los agentes y elimina aquellos que estén muertos. Si ya no quedan agentes vivos, acaba la simulación'''
+
+        agentesMuertos = []
+
+        #Recorremos cada agente y, si está muerto, lo guardamos
+        for agente in self.agents:
+            if agente.estado == "Muerto":
+
+                if len(self.agents) == 1:
+                    print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
+                    self.running = False
+                    break
+
+                else:
+                    agentesMuertos.append(agente)
+
+        for agenteMuerto in agentesMuertos:
+            agenteMuerto.remove()
+        
+
+    
 
 
     def cambioDia(self):
@@ -327,16 +374,10 @@ class ModeloSociedad(mesa.Model):
     '''Paso de tiempo de toda la simulación'''
     def step(self):        
 
-        #Antes de iniciar los steps, comprobamos que quedan agentes vivos
-        if len(self.agents) > 0:
-            # Ejecutamos el step() de todos los agentes en orden aleatorio.
-            self.agents.shuffle_do("step")
+        # Ejecutamos el step() de todos los agentes en orden aleatorio.
+        self.agents.shuffle_do("step")
+        #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
+        self.datacollector.collect(self)
 
-            #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
-            #if self.steps % 20 == 0:
-            self.datacollector.collect(self)
-
-        else:
-            print("ENTRA AQUÍ??")
-            #Si no quedan agentes, paramos la ejecución
-            self.running = False
+        #Miramos si durante el paso anterior ha muerto algún agente, en cuyo caso lo eliminamos del modelo. Si no quedan agentes, acabamos la ejecución
+        self.comprobarAgentesMuertos()
