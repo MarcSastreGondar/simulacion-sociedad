@@ -134,9 +134,11 @@ class EscenarioSociedad(Scenario):
     porcentajeSueldoTeletrabajo: float = 0.8            #Porcentaje del sueldo normal que se cobra en el trabajo (si es < 1, se cobra menos teletrabajando)
     porcentajeEnergiaTeletrabajo: float = 0.6           #Porcentaje de la energia gastada en el trabajo (si es < 1, se usa menos teletrabajando)
 
-    #Estudiar      #######
+    #Estudiar      
     energiaEstudiar: int = -30
     felicidadEstudiar: float = -5
+    costeEstudiar: int = -200
+    aumentoSueldoEstudiar: int = 100
     aumentoFelicidadTrabajoEstudiar: float = 1         
     tiempoEstudiar: float = (24 * 5)                    #5 días
 
@@ -159,7 +161,7 @@ class EscenarioSociedad(Scenario):
     tiempoBonificacion: float = 1.0                         #1 hora
 
 
-    #Generacion Pasiva de Dinero   #####
+    #Generacion Pasiva de Dinero
     dineroPasivoPorTrabajador: int = 10
 
 

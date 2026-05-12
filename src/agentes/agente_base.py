@@ -99,6 +99,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         return gastosCuotidianos
     
 
+    ############ Crec que la condició està malament!!!!!!
     def comprobarEnergiaTiempoDinero(self, energia=None, tiempo=None, dinero=None):
         '''Método principal para comprobar si el agente puede realizar una acción. Comprueba si el agente tiene los recursos necesarios para realizar una cierta acción'''
         #Si el agente tiene igual o más energía de la necesaria y más o igual tiempo disponible que los que requieren la acción, devolvemos true

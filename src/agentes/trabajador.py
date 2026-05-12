@@ -32,12 +32,13 @@ class Trabajador(AgenteBase):
         #Añadimos una aleatoriedad inicial en el sueldo
         parteAleatoria = self.porcentajeAleatorio * self.scenario.sueldoMedio
         parteAleatoria = int(self.aleat.uniform(-parteAleatoria, parteAleatoria))
-        self.modificarSueldoMensual(dinero=parteAleatoria)                              
+        self.modificarCondicionesLaborales(dinero=parteAleatoria)                              
 
         #Inicializamos el contador de días que tiene que trabajar esta semana
         self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
 
-        self.  AÑADIR LO DE FELICIDAD POR TRABAJAR Y QUE SE PUEDA MODIFICAR
+        #Felicidad que gana o pierde al trabajar, puede irse modificando dependiendo de las condiciones laborales del Trabajador
+        self.felicidadTrabajar = self.scenario.felicidadTrabajar
         
 
 
@@ -50,15 +51,26 @@ class Trabajador(AgenteBase):
             self.modificarVecinos(felicidad=self.scenario.felicidadContagiarT)
 
     
-    def modificarSueldoMensual(self, dinero):
-        '''Método para aumentar o disminuir el sueldo que cobra cada mes el Trabajador y, por extensión, el que gana por cada día de Trabajo'''
+    def modificarCondicionesLaborales(self, dinero=None, felicidadTrab=None):
+        '''Método para aumentar o disminuir el sueldo que cobra cada mes el Trabajador y, por extensión, el que gana por cada día de Trabajo.
+           También modifica la felicidad que obtiene por trabajar'''
 
-        self.sueldoMensual += dinero
+        #Si ha habido un cambio de sueldo, lo tratamos
+        if dinero is not None:
+            self.sueldoMensual += dinero
 
-        if self.sueldoMensual < self.scenario.sueldoMinimo:
-            self.sueldoMensual = self.scenario.sueldoMinimo
+            if self.sueldoMensual < self.scenario.sueldoMinimo:
+                self.sueldoMensual = self.scenario.sueldoMinimo
 
-        self.dineroDiaTrabajo = self.sueldoMensual / self.scenario.diasLaborablesAlMes
+            self.dineroDiaTrabajo = self.sueldoMensual / self.scenario.diasLaborablesAlMes
+
+        #Si ha habido un cambio en la felicidad que obtiene el agente por trabajar, la tratamos
+        if felicidadTrab is not None:
+            self.felicidadTrabajar += felicidadTrab
+
+            if self.felicidadTrabajar > self.scenario.felicidadMaxTrabajar:
+                self.felicidadTrabajar = self.scenario.felicidadMaxTrabajar
+    
 
 
     #Acciones que sólo pueden realizar los Trabajadores
@@ -117,6 +129,16 @@ class Trabajador(AgenteBase):
 
     def estudiar(self):
         '''Acción que simula que el agente estudia durante su tiempo libre y consigue algún tipo de experiencia formativa que le permite optar a un mayor sueldo'''
+        #Comprobamos si tiene los recursos suficientes para estudiar (no tenemos en cuenta el tiempo, porque no se puede realizar en 1 solo día)
+        if self.comprobarEnergiaTiempoDinero(energia=self.scenario.energiaEstudiar, dinero=self.scenario.costeEstudiar):
+
+            self.modificarEnergiaFelicidadDinero(energia=self.scenario.energiaEstudiar, felicidad=self.scenario.felicidadEstudiar, dinero=self.scenario.costeEstudiar)
+            self.modificarCondicionesLaborales(dinero=self.scenario.aumentoSueldoEstudiar, felicidadTrab=self.scenario.aumentoFelicidadTrabajoEstudiar)
+            self.ocupar(self.scenario.tiempoEstudiar)
+
+            return True
+        return False
+
     
 
 

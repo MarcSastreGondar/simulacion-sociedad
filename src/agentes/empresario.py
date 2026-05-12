@@ -29,8 +29,15 @@ class Empresario(AgenteBase):
             self.modificarVecinos(tipo="Trabajador", felicidad=self.scenario.felicidadContagiarE)
 
 
-    def generacionPasivaDinero(self):       #####
+    def generacionPasivaDinero(self):
         '''Método que causa al Empresario ganar una cierta cantidad de dinero en función de la cantidad de Trabajadores que tiene cerca (lo que simula que trabajan para él)'''
+        
+        #Obtenemos los trabajadores cercanos
+        trabajadoresCercanos = self.modificarVecinos(tipo="Trabajador")
+        dineroGenerado = len(trabajadoresCercanos) * self.scenario.dineroPasivoPorTrabajador
+
+        #Simplemente le añadimos el dinero que han generado pasivamente "sus" Trabajadores
+        self.modificarEnergiaFelicidadDinero(dinero=dineroGenerado)
 
 
     #Acciones que sólo pueden realizar los Empresarios
