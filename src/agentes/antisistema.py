@@ -24,7 +24,7 @@ class Antisistema(AgenteBase):
     #Métodos auxiliares
     def actualizarOdioSocial(self):
         '''Método que sirve para comprobar si el Antisistema es demasiado odiado, en cuyo caso es expulsado de la sociedad'''
-        if self.odioSocial > self.scenario.odioMaximo:
+        if self.odioSocial >= self.scenario.odioMaximo:
             self.eliminarAgente()
 
     def modificarOdioSocial(self, odio):
@@ -48,7 +48,7 @@ class Antisistema(AgenteBase):
     def atracar(self):
         '''Acción que representa que el Antisistema atraca a otro agente. Intenta robar a 1 Empresario, si no puede, intenta robar a un Trabajador'''
         #Comprobamos si el Antisistema tiene recursos suficientes para realizar la acción
-        if self.energia >= self.scenario.energiaAtracar:
+        if self.comprobarTiempoEnergiaFelicidadDinero(self.scenario.energiaAtracar):
 
             #Obtenemos los Empresarios que puedan ser víctimas del atraco
             victimasPosibles = self.modificarVecinos(tipo="Empresario")
@@ -82,7 +82,7 @@ class Antisistema(AgenteBase):
     def quejarse(self):
         '''Acción de que el Antisistema transmita sus quejas sobre el sistema a los agentes que tenga cerca'''
         #Comprobamos que tenga los recursos necesarios para realizar la acción
-        if self.comprobarEnergiaTiempoDinero(energia=self.scenario.energiaQuejarse, tiempo=self.scenario.tiempoQuejarse):
+        if self.comprobarTiempoEnergiaFelicidadDinero(energia=self.scenario.energiaQuejarse, tiempo=self.scenario.tiempoQuejarse):
             
             #Reducimos la felicidad de todos los que lo escuchen
             self.modificarVecinos(felicidad=self.scenario.felicidadQuejarseReceptor)
@@ -106,8 +106,8 @@ class Antisistema(AgenteBase):
             costeReal = cantEmpresarios * self.scenario.dineroVandalismo
             
             #Si tiene recursos suficientes, realiza la acción y salimos del bucle            
-            if self.comprobarEnergiaTiempoDinero(energia=energiaReal, tiempo=tiempoReal, dinero= costeReal):
-                self.modificarVecinos(cantidad=cantEmpresarios, tipo="Empresario", felicidad=self.scenario.felicidadVandalismoEmpresario, dinero=self.scenario.dineroVandalismoEmpresario)
+            if self.comprobarTiempoEnergiaFelicidadDinero(energia=energiaReal, tiempo=tiempoReal, dinero=costeReal):
+                self.modificarVecinos(cantidadAgentes=cantEmpresarios, tipo="Empresario", felicidad=self.scenario.felicidadVandalismoEmpresario, dinero=self.scenario.dineroVandalismoEmpresario)
 
                 #Actualizamos los recursos del Antisistema
                 self.modificarEnergiaFelicidadDinero(energia=energiaReal, felicidad=self.scenario.felicidadVandalismo, dinero=costeReal)

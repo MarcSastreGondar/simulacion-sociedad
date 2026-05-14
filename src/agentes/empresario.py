@@ -20,18 +20,20 @@ class Empresario(AgenteBase):
 
 
 
-    #Métodos auxiliares 
+    #Métodos auxiliares
+    ###Prime
     def contagiarFelicidadEmpresario(self):
         '''Método que, en caso de que un Empresario esté contento, pone de mejor humor a los demás Trabajadores que tenga cerca. No es una acción, simplemente ocurre de manera pasiva en cada step'''
-        #Si está suficientemente feliz, contagia a los demás Trabajadores
-        if self.felicidad >= self.scenario.umbralContagiarFelicidadE:
-
+        
+        #Si está suficientemente feliz, contagia a los Trabajadores cercanos
+        if self.comprobarTiempoEnergiaFelicidadDinero(felicidad=self.scenario.umbralContagiarFelicidadE):
+            
             self.modificarVecinos(tipo="Trabajador", felicidad=self.scenario.felicidadContagiarE)
 
-
+    ###Prime
     def generacionPasivaDinero(self):
         '''Método que causa al Empresario ganar una cierta cantidad de dinero en función de la cantidad de Trabajadores que tiene cerca (lo que simula que trabajan para él)'''
-        
+
         #Obtenemos los trabajadores cercanos
         trabajadoresCercanos = self.modificarVecinos(tipo="Trabajador")
         dineroGenerado = len(trabajadoresCercanos) * self.scenario.dineroPasivoPorTrabajador
@@ -40,28 +42,32 @@ class Empresario(AgenteBase):
         self.modificarEnergiaFelicidadDinero(dinero=dineroGenerado)
 
 
+
     #Acciones que sólo pueden realizar los Empresarios
+    ###Prime
     def invertir(self):
         '''Método con el que el Empresario invierte y gana un porcentaje de su dinero'''
-        
+
         #Si tiene el tiempo y la energía para invertir, lo hace
-        if self.comprobarEnergiaTiempoDinero(tiempo=self.scenario.tiempoInvertir, energia=self.scenario.energiaInvertir):
+        if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=self.scenario.tiempoInvertir, energia=self.scenario.energiaInvertir):
 
             aumentoDinero = self.scenario.porcentajeDineroInvertir * self.dinero        #El dinero que consigue dependrá del dinero que ya tenga el Empresario
             self.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadInvertir, energia=self.scenario.energiaInvertir, dinero=aumentoDinero)
             self.ocupar(self.scenario.tiempoInvertir)
+
             return True
         
         return False
 
 
+    ###Prime
     def bonificacionMonetaria(self):
         '''Método en el que un Empresario da una bonificación monetaria a los Trabajadores cercanos para ponelos de mejor humor. O les paga a todos o a ninguno'''
-        
+
         trabajadoresBeneficiados = []
 
         #Primero comprobamos cuantos Trabajadores hay cerca que tengan menos de una cierta cantidad de felicidad
-        for agente in self.vecindario.agents:
+        for agente in self.vecinos:
             if (agente.tipo == "Trabajador") and (agente.felicidad < self.scenario.umbralFelicidadBonificacionMonetaria):
                 trabajadoresBeneficiados.append(agente)
 
@@ -69,10 +75,11 @@ class Empresario(AgenteBase):
         #Una vez obtenida la lista, comprobamos si el empresario tiene dinero suficiente para recompensar a los Trabajadores
         cantTrabajadores = len(trabajadoresBeneficiados)
 
+
         if cantTrabajadores > 0:
             dineroTotalGastar = (-1) * cantTrabajadores * self.scenario.dineroPorTrabajadorBonificacion     #Por -1 porque representa un gasto
 
-            if self.comprobarEnergiaTiempoDinero(dinero=dineroTotalGastar):
+            if self.comprobarTiempoEnergiaFelicidadDinero(dinero=dineroTotalGastar):
                 #En caso de tener dinero suficiente, el empresario lo gasta en bonificarles
                 self.modificarEnergiaFelicidadDinero(dinero=dineroTotalGastar)      #El empresario usa el dinero y el tiempo
                 self.ocupar(self.scenario.tiempoBonificacion)
@@ -80,7 +87,7 @@ class Empresario(AgenteBase):
                 #Recorremos cada agente para darles el dinero a cada uno
                 for agente in trabajadoresBeneficiados:
                     agente.modificarEnergiaFelicidadDinero(felicidad=agente.scenario.aumentoFelicidadTrabajadorBonificacion, dinero=agente.scenario.dineroPorTrabajadorBonificacion)
-
+                    
                 return True
         
         #Si no se han encontrado trabajadores que cumplan las condiciones o el Empresario no tiene dinero suficiente, devolvemos False
@@ -91,15 +98,20 @@ class Empresario(AgenteBase):
         self.actualizarVecinos()
         self.move()
 
+
+
+
         #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los Trabajadores cercanos
-        self.contagiarFelicidadEmpresario()
+        #self.contagiarFelicidadEmpresario()
 
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Empresarios'''
+
+        #Cada día obtiene dinero en función de los trabajadores que tiene cerca
+        self.generacionPasivaDinero()
 
     def avanceSemanalEspecifico(self):
         '''Método que simula el paso de una semana a otra para los Empresarios'''
 
     def elegirAccion(self):
-        """Método que define qué acciones puede tomar un Empresario en un cierto momento"""
-        print()
+        '''Método que define qué acciones puede tomar un Empresario en un cierto momento'''

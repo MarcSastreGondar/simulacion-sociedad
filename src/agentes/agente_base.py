@@ -103,11 +103,10 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         return gastosCuotidianos
     
 
-    ############ Crec que la condició està malament!!!!!!
-    def comprobarEnergiaTiempoDinero(self, energia=None, tiempo=None, dinero=None):
+    def comprobarTiempoEnergiaFelicidadDinero(self, tiempo=None, energia=None, felicidad=None, dinero=None):
         '''Método principal para comprobar si el agente puede realizar una acción. Comprueba si el agente tiene los recursos necesarios para realizar una cierta acción'''
         #Si el agente tiene igual o más energía de la necesaria y más o igual tiempo disponible que los que requieren la acción, devolvemos true
-        if (energia is None or self.energia >= abs(energia)) and (tiempo is None or self.tiempoDisponible >= tiempo) and (dinero is None or self.dinero >= abs(dinero)):
+        if (tiempo is None or self.tiempoDisponible >= tiempo) and (energia is None or self.energia >= abs(energia)) and (felicidad is None or self.felicidad >= abs(felicidad)) and (dinero is None or self.dinero >= abs(dinero)):
             return True
         else:
             return False
@@ -246,11 +245,11 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         redondearDecimalMedio(horas)
 
         #En caso de que no tenga tiempo suficiente para dormir tanto como quiere, reducimos la cantidad de horas que podrá dormir hasta que, o bien pueda dormir, o bien no llegue al mínimo
-        while((not self.comprobarEnergiaTiempoDinero(tiempo=horas)) and (horas > self.scenario.horasMinimasDormir)):
+        while((not self.comprobarTiempoEnergiaFelicidadDinero(tiempo=horas)) and (horas > self.scenario.horasMinimasDormir)):
             horas -= 0.5      #Restamos media hora
 
         #Comprobamos si tiene la cantidad suficiente de horas disponibles para dormir
-        if self.comprobarEnergiaTiempoDinero(tiempo=horas):
+        if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=horas):
             #Duerme la cantidad de horas decidida y recupera energía en función de la cantidad de horas que duerme
             porcentajeRecuperado = 1/self.scenario.horasMaximasDormir * horas
             energiaRecuperada = int(self.energiaMax * porcentajeRecuperado)
@@ -270,10 +269,8 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             return True
         
         #Si no tiene la suficiente cantidad de tiempo para dormir, no duerme
-        return False
-    
+        return False    
 
-        
 
     def entrenarGimnasio(self):
         '''Método que simula que el agente decide entrenar en el gimnasio'''
@@ -285,7 +282,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
 
         #Comprobamos que el agente tenga la energia, tiempo y dinero (si necesita pagar) necesarios para realizar esta acción
-        if self.comprobarEnergiaTiempoDinero(energia=self.scenario.energiaEntrenar, tiempo=self.scenario.tiempoEntrenar, dinero=cuotaGimnasio):
+        if self.comprobarTiempoEnergiaFelicidadDinero(energia=self.scenario.energiaEntrenar, tiempo=self.scenario.tiempoEntrenar, dinero=cuotaGimnasio):
             
             #Si hoy ha sido el día en el que se ha tenido que pagar la suscripción, reiniciamos el contador de días
             if cuotaGimnasio != 0:
@@ -305,7 +302,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
     def compraLujosa(self):
         '''Acción que representa realizar una compra cara que no es vital para la supervivencia'''
         #Comprobamos si el agente tiene los recursos necesarios para realizar la acción
-        if self.comprobarEnergiaTiempoDinero(tiempo=self.scenario.tiempoLujo, dinero=self.scenario.costeLujo):
+        if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=self.scenario.tiempoLujo, dinero=self.scenario.costeLujo):
 
             #Modificamos los recursos del agente y lo ocupamos
             self.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadLujo, dinero=self.scenario.costeLujo)
@@ -320,7 +317,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
     def ocio(self):
         '''Acción que representa realizar actividades de ocio que no representan un deporte, como podría ser ir al cine con unos amigos'''
         #Comprobamos si el agente tiene los recursos necesarios para realizar la acción
-        if self.comprobarEnergiaTiempoDinero(energia=self.scenario.energiaOcio, tiempo=self.scenario.tiempoOcio, dinero=self.scenario.costeOcio):
+        if self.comprobarTiempoEnergiaFelicidadDinero(energia=self.scenario.energiaOcio, tiempo=self.scenario.tiempoOcio, dinero=self.scenario.costeOcio):
 
             #Modificamos los recursos del agente y lo ocupamos
             self.modificarEnergiaFelicidadDinero(energia=self.scenario.energiaOcio, felicidad=self.scenario.felicidadOcio, dinero=self.scenario.costeOcio)
@@ -369,7 +366,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
 
     def printCaracteristicas(self):
-        print(f"Tipo del agente = {self.tipo}. Tiempo máximo posible = {self.tiempoMaxPosible}. Dinero inicial = {self.dinero}. Felicidad inicial = {self.felicidad}.")
+        print(f"ID = {self.unique_id}. Tipo del agente = {self.tipo}. Dinero = {self.dinero}. Felicidad = {self.felicidad}. Energia = {self.energia}. Tiempo disponible = {self.tiempoDisponible}. Tiempo máximo posible = {self.tiempoMaxPosible}.")
 
 
     def avanceDiarioGeneral(self):

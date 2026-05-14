@@ -53,9 +53,8 @@ class EscenarioSociedad(Scenario):
     mesesSuicidio: int = 5          #Cantidad de meses con depresión acumulados que llevan al agente a ser borrado
 
 
-    #Distancia a la que los agentes pueden ver, en todas direcciones
-    visionAgente: int = 3
-    movimientoAgente: int = 1
+    visionAgente: int = 3           #Distancia a la que los agentes pueden ver, en todas direcciones
+    movimientoAgente: int = 2       #Distancia a la que se pueden, como máximo, mover los agentes, en todas direcciones
 
 
     #Cambios temporales en los recursos de los agentes
@@ -169,7 +168,7 @@ class EscenarioSociedad(Scenario):
 
     #Contagiar Felicidad pasivamente
     umbralContagiarFelicidadE: int = 90
-    felicidadContagiarE: float = 1          #Cantidad de felicidad que le da a los Trabajadores cercanos
+    felicidadContagiarE: float = 0.5          #Cantidad de felicidad que le da a los Trabajadores cercanos
 
 
     #Parámetros de las acciones de los antisistema:
@@ -197,7 +196,7 @@ class EscenarioSociedad(Scenario):
     dineroVandalismoEmpresario: int = -200          #Dinero que pierde el Empresario en reparaciones
 
     #Contagiar Odio pasivamente
-    umbralContagiarOdio: int = 90
+    umbralContagiarOdio: int = 50
     felicidadContagiarA: float = -1          #Cantidad de felicidad que le da a los trabajadores cercanos
 
     
@@ -251,10 +250,7 @@ class ModeloSociedad(mesa.Model):
         #####TEMP!!!! Hacemos algunos step de cada agente para verificar que funcionan correctamente. De esta manera, nos saltará un error detallado al
         #ejecutar (en el gráfico de Solara los errores no son nada descriptivos o ni aparecen)
         self.agents.shuffle_do("step")
-        self.agents.shuffle_do("step")
-        self.agents.shuffle_do("step")
 
-        print("Valores vars cant de agentes:", n_trabajadores, n_empresarios, n_antisistemas)
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
         #self.agents.do("printCaracteristicas")
         
