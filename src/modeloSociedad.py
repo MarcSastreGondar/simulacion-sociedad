@@ -47,7 +47,7 @@ class EscenarioSociedad(Scenario):
     n_empresarios: int = 20                 #Cantidad de empresarios
     n_antisistemas: int = 10                 #Cantidad de agentes antisistema
 
-    porcentajeAleatorio: float = 0.5
+    porcentajeAleatorio: float = 0.25
 
     umbralDepresion: int = 10        #A partir de qué punto de felicidad empezamos a considerar que el agente tiene depresión
     mesesSuicidio: int = 5          #Cantidad de meses con depresión acumulados que llevan al agente a ser borrado

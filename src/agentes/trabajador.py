@@ -34,8 +34,9 @@ class Trabajador(AgenteBase):
         #Añadimos una aleatoriedad inicial en el sueldo
         parteAleatoria = self.porcentajeAleatorio * self.scenario.sueldoMedio
         parteAleatoria = int(self.aleat.uniform(-parteAleatoria, parteAleatoria))
+
         self.dineroDiaTrabajo = 0                                       #Para evitar posibles errores
-        self.modificarCondicionesLaborales(dinero=parteAleatoria)                              
+        self.modificarCondicionesLaborales(dinero=parteAleatoria)                           
 
         #Inicializamos el contador de días que tiene que trabajar esta semana
         self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
@@ -64,7 +65,7 @@ class Trabajador(AgenteBase):
             if self.sueldoMensual < self.scenario.sueldoMinimo:
                 self.sueldoMensual = self.scenario.sueldoMinimo
 
-            self.dineroDiaTrabajo = self.sueldoMensual / self.scenario.diasLaborablesAlMes
+            self.dineroDiaTrabajo = int(self.sueldoMensual / self.scenario.diasLaborablesAlMes)
 
         #Si ha habido un cambio en la felicidad que obtiene el agente por trabajar, la tratamos
         if felicidadTrab is not None:
@@ -76,31 +77,31 @@ class Trabajador(AgenteBase):
     
 
     #Acciones que sólo pueden realizar los Trabajadores
+    ###Prime
     def trabajar(self, obligatorio=False):
         '''Acción de trabajar presencialmente'''
-        print("INICIO")
-        self.printCaracteristicas()
-        seguir
-        #Si es obligatorio que trabaje o, si no es obligatorio pero tiene el tiempo necesario para trabajar
-        if (obligatorio is not None and obligatorio) or (self.comprobarTiempoEnergiaFelicidadDinero(tiempo=self.tiempoPresencialTrabajo)):
+                
+        #Si es obligatorio que trabaje o, si no es obligatorio pero tiene los recursos necesarios para trabajar
+        if (obligatorio is not None and obligatorio) or (self.comprobarTiempoEnergiaFelicidadDinero(tiempo=self.tiempoPresencialTrabajo, energia=self.scenario.energiaTrabajar)):
             
             #Modificamos los recursos necesarios por haber trabajado
             self.modificarEnergiaFelicidadDinero(energia=self.scenario.energiaTrabajar, felicidad=self.scenario.felicidadTrabajar, dinero=self.dineroDiaTrabajo)
             self.ocupar(self.tiempoPresencialTrabajo)
 
-            self.printCaracteristicas()
             return True
         
         #Si no puede realizar la acción, devolvemos False
         return False
 
-    
+    ###Prime
     def trabajarDoble(self):
         '''Acción que representa tener 2 trabajos presenciales distintos'''
-        #Comprobamos que el agente tenga el tiempo necesario para trabajar
+        
+        #Comprobamos que el agente tenga los recursos necesarios para trabajar
         tiempoDoble = 2 * self.tiempoPresencialTrabajo
-        if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=tiempoDoble):
-            energiaDoble = 2 * self.scenario.energiaTrabajar
+        energiaDoble = 2 * self.scenario.energiaTrabajar
+
+        if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=tiempoDoble, energia=energiaDoble):
             felicidadDoble = 2 * self.scenario.felicidadTrabajar
             dineroDoble = 2 * self.dineroDiaTrabajo
 
@@ -114,14 +115,16 @@ class Trabajador(AgenteBase):
         #Si no puede realizar la acción, devolvemos False
         return False
     
-
+    ###Prime
     def teletrabajar(self):
         '''Acción de teletrabajar (en vez de trabajar presencialmente)'''
+
+        energiaTeletrabajo = redondearDecimalMedio(self.scenario.porcentajeEnergiaTeletrabajo * self.scenario.energiaTrabajar)
+
         #Comprobamos que el agente tenga el tiempo necesario para trabajar
-        if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=self.scenario.tiempoTrabajo):
+        if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=self.scenario.tiempoTrabajo, energia=energiaTeletrabajo):
             
-            dineroTeletrabajo = self.scenario.porcentajeSueldoTeletrabajo * self.dineroDiaTrabajo
-            energiaTeletrabajo = self.scenario.porcentajeEnergiaTeletrabajo * self.scenario.energiaTrabajar
+            dineroTeletrabajo = int(self.scenario.porcentajeSueldoTeletrabajo * self.dineroDiaTrabajo)
             #Modificamos los recursos necesarios por haber trabajado
             self.modificarEnergiaFelicidadDinero(energia=energiaTeletrabajo, dinero=dineroTeletrabajo)
             self.ocupar(self.scenario.tiempoTrabajo)
@@ -134,12 +137,20 @@ class Trabajador(AgenteBase):
 
     def estudiar(self):
         '''Acción que simula que el agente estudia durante su tiempo libre y consigue algún tipo de experiencia formativa que le permite optar a un mayor sueldo'''
+        
+        print("INICIO")
+        self.printCaracteristicas()
+        print(self.scenario.tiempoTrabajo, self.sueldoMensual, self.dineroDiaTrabajo, self.scenario.energiaTrabajar)
+
         #Comprobamos si tiene los recursos suficientes para estudiar (no tenemos en cuenta el tiempo, porque no se puede realizar en 1 solo día)
         if self.comprobarTiempoEnergiaFelicidadDinero(energia=self.scenario.energiaEstudiar, dinero=self.scenario.costeEstudiar):
 
             self.modificarEnergiaFelicidadDinero(energia=self.scenario.energiaEstudiar, felicidad=self.scenario.felicidadEstudiar, dinero=self.scenario.costeEstudiar)
             self.modificarCondicionesLaborales(dinero=self.scenario.aumentoSueldoEstudiar, felicidadTrab=self.scenario.aumentoFelicidadTrabajoEstudiar)
             self.ocupar(self.scenario.tiempoEstudiar)
+
+            print("En medio")
+            self.printCaracteristicas()
 
             return True
         return False
@@ -179,7 +190,7 @@ class Trabajador(AgenteBase):
         self.actualizarVecinos()
 
 
-        self.modificarCondicionesLaborales(dinero=self.scenario.aumentoSueldoEstudiar, felicidadTrab=self.scenario.aumentoFelicidadTrabajoEstudiar)
+        self.estudiar()
 
 
         #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
