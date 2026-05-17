@@ -137,7 +137,7 @@ model_params = {
     "felicidadOcio": escenario.felicidadOcio,
     "energiaComidaBasura": escenario.energiaComidaBasura,
     "felicidadComidaBasura": escenario.felicidadComidaBasura,
-    "tiempoComidaBasura": escenario.tiempoComidaBasura,
+    "maxComidasPorDia": escenario.maxComidasPorDia,
     "porcentajeAhorro": escenario.porcentajeAhorro,
     "reduccionEnergiaMaxComidaBasura": escenario.reduccionEnergiaMaxComidaBasura,
 

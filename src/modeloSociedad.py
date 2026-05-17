@@ -43,13 +43,13 @@ class EscenarioSociedad(Scenario):
     felicidadMax: float = 100.0
 
     #Cantidad de cada tipo de agente
-    n_trabajadores: int = 100               #Cantidad de trabajadores
-    n_empresarios: int = 20                 #Cantidad de empresarios
-    n_antisistemas: int = 10                 #Cantidad de agentes antisistema
+    n_trabajadores: int = 5               #Cantidad de trabajadores
+    n_empresarios: int = 5                 #Cantidad de empresarios
+    n_antisistemas: int = 5                 #Cantidad de agentes antisistema
 
     porcentajeAleatorio: float = 0.25
 
-    umbralDepresion: int = 10        #A partir de qué punto de felicidad empezamos a considerar que el agente tiene depresión
+    umbralDepresion: float = 10.0        #A partir de qué punto de felicidad empezamos a considerar que el agente tiene depresión
     mesesSuicidio: int = 5          #Cantidad de meses con depresión acumulados que llevan al agente a ser borrado
 
 
@@ -98,7 +98,7 @@ class EscenarioSociedad(Scenario):
     tiempoEntrenar: float = 1.5              #1.5 horas
     cuotaGimnasio: int = -50
     felicidadEntrenar: int = 1
-    aumentoEnergiaMaxEntrenar: int = 5
+    aumentoEnergiaMaxEntrenar: int = 2
 
     #Compra lujosa
     costeLujo: int = -300
@@ -114,9 +114,9 @@ class EscenarioSociedad(Scenario):
     #Comida basura
     energiaComidaBasura: int = -2
     felicidadComidaBasura: float = 2
-    tiempoComidaBasura: float = 1               #Tiempo placeholder para simular un paso de tiempo en el step (para no poder hacer esta acción infinitamente)
     porcentajeAhorro: int = 0.2                 #Porcentaje de los gastos cuotidianos que se ahorran al comer comida basura
     reduccionEnergiaMaxComidaBasura: int = -1
+    maxComidasPorDia: int = 2                   #Cantidad máxima de comidas que puede reemplazar cada día un agente por comida basura
 
 
     #Parámetros de las acciones de los trabajadores:
@@ -144,7 +144,7 @@ class EscenarioSociedad(Scenario):
     tiempoEstudiar: float = (24 * 5)                    #5 días
 
     #Contagiar Felicidad pasivamente
-    umbralContagiarFelicidadT: int = 90             #A partir de qué punto contiaga la felicidad a sus vecinos
+    umbralContagiarFelicidadT: float = 90.0             #A partir de qué punto contiaga la felicidad a sus vecinos
     felicidadContagiarT: float = 0.5                #Cantidad de felicidad que aporta a sus vecinos
 
 
@@ -167,7 +167,7 @@ class EscenarioSociedad(Scenario):
 
 
     #Contagiar Felicidad pasivamente
-    umbralContagiarFelicidadE: int = 90
+    umbralContagiarFelicidadE: float = 90.0
     felicidadContagiarE: float = 0.5          #Cantidad de felicidad que le da a los Trabajadores cercanos
 
 
@@ -181,7 +181,7 @@ class EscenarioSociedad(Scenario):
     odioAtracar: int = 20                               #Cantidad de odio que gana el antisistema
 
     #Quejarse
-    felicidadQuejarse: float = -1             #Felicidad que pierde el antisistema al quejarse
+    felicidadQuejarse: float = -1                   #Felicidad que pierde el antisistema al quejarse
     felicidadQuejarseReceptor: float = -2           #Felicidad que pierden los oyentes al escuchar al antisistema quejarse
     energiaQuejarse: int = -3
     tiempoQuejarse: float = 1
@@ -196,7 +196,7 @@ class EscenarioSociedad(Scenario):
     dineroVandalismoEmpresario: int = -200          #Dinero que pierde el Empresario en reparaciones
 
     #Contagiar Odio pasivamente
-    umbralContagiarOdio: int = 50
+    umbralContagiarOdio: float = 50.0
     felicidadContagiarA: float = -1          #Cantidad de felicidad que le da a los trabajadores cercanos
 
     
@@ -252,7 +252,6 @@ class ModeloSociedad(mesa.Model):
         self.agents.shuffle_do("step")
 
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
-        #self.agents.do("printCaracteristicas")
         
         
         #Inicializamos el data collector para que recoja los datos durante la ejecución
@@ -294,19 +293,21 @@ class ModeloSociedad(mesa.Model):
 
 
         #Creamos los eventos que ocurrirán periódicamente durante la ejecución
-        #Paso del tiempo de 1 día
-        horasDia = 24.0
-        self.schedule_recurring(
-            self.cambioDia,
-            Schedule(interval=horasDia)
-        )
-
         #Paso de tiempo de 1 semana
+        horasDia = 24.0
         horasSemana = horasDia * 7
+
         self.schedule_recurring(
             self.cambioSemana,
-            Schedule(interval=horasSemana)
+            Schedule(interval=horasSemana, start=1)
         )
+        
+        #Paso del tiempo de 1 día
+        self.schedule_recurring(
+            self.cambioDia,
+            Schedule(interval=horasDia, start=1)
+        )
+
 
     def exportarDatos(self):
         '''Método para guardar los datos recolectados durante la simulación en la carpeta de resultados'''
@@ -327,53 +328,70 @@ class ModeloSociedad(mesa.Model):
         print(f"Datos exportados correctamente como sim_{timestamp}")
 
 
+    ###Prime
     def comprobarAgentesMuertos(self):
         '''Método que analiza todos los agentes y elimina aquellos que estén muertos. Si ya no quedan agentes vivos, acaba la simulación'''
 
         agentesMuertos = []
 
-        #Recorremos cada agente y, si está muerto, lo guardamos
-        for agente in self.agents:
-            if agente.estado == "Muerto":
+        #Comprobamos si ya se ha llegado al límite de agentes
+        if len(self.agents) == 1:
+            print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
+            self.running = False
+        
+        else:
 
-                if len(self.agents) == 1:
-                    print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
-                    self.running = False
-                    break
+            #Recorremos cada agente y, si está muerto, lo guardamos
+            for agente in self.agents:
+                if agente.estado == "Muerto":
 
-                else:
                     agentesMuertos.append(agente)
 
-        for agenteMuerto in agentesMuertos:
-            agenteMuerto.remove()
+
+            for agenteMuerto in agentesMuertos:
+
+                #Lo comprobamos en cada iteración para evitar que se eliminen todos los agentes restantes
+                if len(self.agents) == 1:
+                        print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
+                        self.running = False
+                        break
+                else:
+                    agenteMuerto.remove()
         
 
     
-
-
+    ###Prime
     def cambioDia(self):
         '''Método que determina si han pasado 24 horas (steps) para empezar un nuevo día. Empieza los eventos diarios propios de los agentes'''
-        #Llamamos al método que se encarga de las modificaciones diarias propias de todos los agentes
-        self.agents.shuffle_do("avanceDiarioGeneral")
+        
+        if self.running:
+            #Llamamos al método que se encarga de las modificaciones diarias propias de todos los agentes
+            self.agents.shuffle_do("avanceDiarioGeneral")
 
-        #Llamamos al método que se encarga de las modificaciones diarias propias de cada tipo de agente
-        self.agents.shuffle_do("avanceDiarioEspecifico")
+            #Llamamos al método que se encarga de las modificaciones diarias propias de cada tipo de agente
+            self.agents.shuffle_do("avanceDiarioEspecifico")
 
-    
+    ###Prime
     def cambioSemana(self):
         '''Método que determina si han pasado 24 horas (steps) para empezar un nuevo día. Empieza los eventos diarios propios de los agentes'''
+        
+        if self.running:
+            #Llamamos al método que se encarga de las modificaciones diarias propias de cada tipo de agente
+            self.agents.shuffle_do("avanceSemanalEspecifico")
 
-        #Llamamos al método que se encarga de las modificaciones diarias propias de cada tipo de agente
-        self.agents.shuffle_do("avanceSemanalEspecifico")
 
-
-    '''Paso de tiempo de toda la simulación'''
+    ###Prime
     def step(self):        
+        '''Paso de tiempo de toda la simulación'''
 
-        # Ejecutamos el step() de todos los agentes en orden aleatorio.
-        self.agents.shuffle_do("step")
-        #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
-        self.datacollector.collect(self)
+        #Aseguramos de que el modelo siga activo
+        if self.running:
+            
+            # Ejecutamos el step() de todos los agentes en orden aleatorio.
+            self.agents.shuffle_do("step")
 
-        #Miramos si durante el paso anterior ha muerto algún agente, en cuyo caso lo eliminamos del modelo. Si no quedan agentes, acabamos la ejecución
-        self.comprobarAgentesMuertos()
+            #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
+            self.datacollector.collect(self)
+
+            #Miramos si durante el paso anterior ha muerto algún agente, en cuyo caso lo eliminamos del modelo. Si no quedan agentes, acabamos la ejecución
+            self.comprobarAgentesMuertos()

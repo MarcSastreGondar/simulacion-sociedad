@@ -37,14 +37,10 @@ class Trabajador(AgenteBase):
 
         self.dineroDiaTrabajo = 0                                       #Para evitar posibles errores
         self.modificarCondicionesLaborales(dinero=parteAleatoria)                           
-
-        #Inicializamos el contador de días que tiene que trabajar esta semana
-        self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
         
 
 
     #Métodos auxiliares 
-    ###PRIME
     def contagiarFelicidadTrabajador(self):
         '''Método que, en caso de que un Trabajador esté contento, pone de mejor humor a los demás agentes que tenga cerca. No es una acción, simplemente ocurre de manera pasiva en cada step'''
 
@@ -53,7 +49,7 @@ class Trabajador(AgenteBase):
 
             self.modificarVecinos(felicidad=self.scenario.felicidadContagiarT)
 
-    ###Prime
+
     def modificarCondicionesLaborales(self, dinero=None, felicidadTrab=None):
         '''Método para aumentar o disminuir el sueldo que cobra cada mes el Trabajador y, por extensión, el que gana por cada día de Trabajo.
            También modifica la felicidad que obtiene por trabajar'''
@@ -77,7 +73,6 @@ class Trabajador(AgenteBase):
     
 
     #Acciones que sólo pueden realizar los Trabajadores
-    ###Prime
     def trabajar(self, obligatorio=False):
         '''Acción de trabajar presencialmente'''
                 
@@ -93,7 +88,7 @@ class Trabajador(AgenteBase):
         #Si no puede realizar la acción, devolvemos False
         return False
 
-    ###Prime
+
     def trabajarDoble(self):
         '''Acción que representa tener 2 trabajos presenciales distintos'''
         
@@ -115,7 +110,7 @@ class Trabajador(AgenteBase):
         #Si no puede realizar la acción, devolvemos False
         return False
     
-    ###Prime
+
     def teletrabajar(self):
         '''Acción de teletrabajar (en vez de trabajar presencialmente)'''
 
@@ -137,10 +132,6 @@ class Trabajador(AgenteBase):
 
     def estudiar(self):
         '''Acción que simula que el agente estudia durante su tiempo libre y consigue algún tipo de experiencia formativa que le permite optar a un mayor sueldo'''
-        
-        print("INICIO")
-        self.printCaracteristicas()
-        print(self.scenario.tiempoTrabajo, self.sueldoMensual, self.dineroDiaTrabajo, self.scenario.energiaTrabajar)
 
         #Comprobamos si tiene los recursos suficientes para estudiar (no tenemos en cuenta el tiempo, porque no se puede realizar en 1 solo día)
         if self.comprobarTiempoEnergiaFelicidadDinero(energia=self.scenario.energiaEstudiar, dinero=self.scenario.costeEstudiar):
@@ -149,59 +140,57 @@ class Trabajador(AgenteBase):
             self.modificarCondicionesLaborales(dinero=self.scenario.aumentoSueldoEstudiar, felicidadTrab=self.scenario.aumentoFelicidadTrabajoEstudiar)
             self.ocupar(self.scenario.tiempoEstudiar)
 
-            print("En medio")
-            self.printCaracteristicas()
-
             return True
         return False
 
     
 
-
     #Métodos relacionados con el flujo de los agentes
-    def avanceDiarioEspecifico(self):
-        '''Método que simula el paso de un día a otro para los Trabajadores'''
-
-        #Si aún le quedan días por trabajar esta semana, el agente debe trabajar
-        if(self.diasLaborablesPendientes > 0):
-            
-            #Elegimos qué jornada laboral va a tener. En caso de estar ocupado, seguirá asistiendo al trabajo igualmente (simplemente se añadirán más horas a su contador)
-            opcion = self.aleat.integers(0,2)    ##########
-            ##########
-            if opcion == 0:
-                self.trabajar()
-            elif opcion == 1:
-                self.trabajarDoble()
-            elif opcion == 2:
-                self.teletrabajar()
-            
-            self.diasLaborablesPendientes -= 1      #Restamos en 1 la cantidad de días que puede trabajar el agente esta semana
-
-
     def avanceSemanalEspecifico(self):
         '''Método que simula el paso de una semana a otra para los Trabajadores'''
         #Reiniciamos el contador de días que pueden trabajar esta semana
         self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
+
     
+    def avanceDiarioEspecifico(self):
+        '''Método que simula el paso de un día a otro para los Trabajadores'''
+
+
+        #Si aún le quedan días por trabajar esta semana, el agente debe trabajar
+        if(self.diasLaborablesPendientes > 0):
+
+            #Elegimos qué jornada laboral va a tener. En caso de estar ocupado, seguirá asistiendo al trabajo igualmente (simplemente se añadirán más horas a su contador)
+            opcion = self.aleat.integers(0,2)    ##########
+            ##########
+            trabajado = False
+            if opcion == 0:
+                trabajado = self.trabajar()
+            elif opcion == 1:
+                trabajado = self.trabajarDoble()
+            elif opcion == 2:
+                trabajado = self.teletrabajar()
+
+            if not trabajado:
+                self.trabajar(obligatorio=True)
+            
+            self.diasLaborablesPendientes -= 1      #Restamos en 1 la cantidad de días que puede trabajar el agente esta semana
+
+    
+    def elegirAccion(self):
+        '''Método que define qué acciones puede tomar un Trabajador en un cierto momento'''
+        pass
+
 
     def step(self):
         '''Definimos lo que puede hacer cada agente en su tiempo libre'''
-
         self.actualizarVecinos()
 
 
-        self.estudiar()
-
-
         #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
-        if self.estaDisponible():            
+        if self.estaDisponible():        
+
             self.move()
-
-            ###################
-            if self.felicidad > 0:
-                self.felicidad -= 5
-
-            self.energia -= 1
+            self.elegirAccion()
 
         else:
             #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
@@ -209,9 +198,4 @@ class Trabajador(AgenteBase):
         
         #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los agentes cercanos
         self.contagiarFelicidadTrabajador()
-
-    
-    def elegirAccion(self):
-        '''Método que define qué acciones puede tomar un Trabajador en un cierto momento'''
-        print()
         

@@ -22,13 +22,16 @@ class Antisistema(AgenteBase):
 
 
     #Métodos auxiliares
-    def actualizarOdioSocial(self):
+    def comprobarOdioSocial(self):
         '''Método que sirve para comprobar si el Antisistema es demasiado odiado, en cuyo caso es expulsado de la sociedad'''
+
         if self.odioSocial >= self.scenario.odioMaximo:
+
             self.eliminarAgente()
 
     def modificarOdioSocial(self, odio):
         '''Método para actualizar de manera controlada el valor del odio social'''
+
         self.odioSocial += odio
 
         #Comprobamos que el odioSocial no pase de las fronteras
@@ -39,14 +42,17 @@ class Antisistema(AgenteBase):
             self.odioSocial = 0
 
     def contagiarOdio(self):
+        '''Método que consiste en que el Antisistema, en caso de no estar de buen humor, hace infelices a los agentes que tiene cerca'''
         #Si no está suficientemente feliz, contagia a los demás
         if self.felicidad <= self.scenario.umbralContagiarOdio:
+
             self.modificarVecinos(felicidad=self.scenario.felicidadContagiarA)      #Felicidad negativa
 
 
     #Acciones
     def atracar(self):
         '''Acción que representa que el Antisistema atraca a otro agente. Intenta robar a 1 Empresario, si no puede, intenta robar a un Trabajador'''
+        
         #Comprobamos si el Antisistema tiene recursos suficientes para realizar la acción
         if self.comprobarTiempoEnergiaFelicidadDinero(self.scenario.energiaAtracar):
 
@@ -59,7 +65,6 @@ class Antisistema(AgenteBase):
 
             #Si hay Empresarios o Trabajadores cerca (con prioridad de los Empresarios), simplemente atracamos a uno cualquiera
             if len(victimasPosibles) > 0:
-
                 indiceAleat = self.aleat.integers(0, len(victimasPosibles))
                 victima = victimasPosibles[indiceAleat]
                 dineroRobado = victima.dinero * self.scenario.porcentajeDineroRobado
@@ -71,16 +76,17 @@ class Antisistema(AgenteBase):
                 self.modificarEnergiaFelicidadDinero(energia=self.scenario.energiaAtracar, felicidad=self.scenario.felicidadAtracar, dinero=dineroRobado)
                 self.ocupar(self.scenario.tiempoAtracar)
                 self.modificarOdioSocial(self.scenario.odioAtracar)
-                
+
                 return True
+
         #Si no se ha podido atracar a nadie, se devuelve False
         return False
 
 
     
-
     def quejarse(self):
         '''Acción de que el Antisistema transmita sus quejas sobre el sistema a los agentes que tenga cerca'''
+
         #Comprobamos que tenga los recursos necesarios para realizar la acción
         if self.comprobarTiempoEnergiaFelicidadDinero(energia=self.scenario.energiaQuejarse, tiempo=self.scenario.tiempoQuejarse):
             
@@ -91,13 +97,13 @@ class Antisistema(AgenteBase):
             self.modificarEnergiaFelicidadDinero(energia=self.scenario.energiaQuejarse, felicidad=self.scenario.felicidadQuejarse)
             self.ocupar(self.scenario.tiempoQuejarse)
 
-    
     def vandalismo(self):
         '''Acción de romper, pintar o ensuciar propiedades de Empresarios con el fin de tener un impacto negativo sobre estos'''
+
         #Obtenemos la cantidad de empresarios a los que puede vandalizar
         empresariosVandalizados = self.modificarVecinos(tipo="Empresario")      #Recojemos los empresarios que serán vandalizados
         cantEmpresarios = len(empresariosVandalizados)
-        
+
         while cantEmpresarios > 0:
 
             #Calculamos los recursos necesarios para vandalizar a esta cantidad de empresarios
@@ -114,22 +120,13 @@ class Antisistema(AgenteBase):
                 self.ocupar(tiempoReal)
                 self.modificarOdioSocial(self.scenario.odioVandalismo)
 
-                break
+                return True
             else:
                 #Si no tiene recursos suficientes, intenta vandalizar a 1 empresario menos
                 cantEmpresarios -= 1
+
+        return False
         
-
-    def step(self):
-        #Comprobamos si el agente es demasiado odiado
-        self.actualizarOdioSocial()
-
-        self.actualizarVecinos()
-        self.move()
-
-        #Antes de acabar el paso, si no está feliz, contagia su infelicidad a los agentes cercanos
-        self.contagiarOdio()
-
 
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Antisistema'''
@@ -138,6 +135,27 @@ class Antisistema(AgenteBase):
         '''Método que simula el paso de una semana a otra para los Antisistema'''
         self.modificarOdioSocial(self.scenario.reduccionPasivaOdio)
 
+
     def elegirAccion(self):
         """Método que define qué acciones puede tomar un Antisistema en un cierto momento"""
-        print()
+        pass
+
+
+    def step(self):
+        #Comprobamos si el agente es demasiado odiado
+        self.comprobarOdioSocial()
+
+        self.actualizarVecinos()
+
+        #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
+        if self.estaDisponible():            
+
+            self.move()
+            self.elegirAccion()
+
+        else:
+            #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
+            self.ocupado -= 1.0
+
+        #Antes de acabar el paso, si no está feliz, contagia su infelicidad a los agentes cercanos
+        self.contagiarOdio()

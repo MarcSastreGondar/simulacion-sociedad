@@ -21,7 +21,6 @@ class Empresario(AgenteBase):
 
 
     #Métodos auxiliares
-    ###Prime
     def contagiarFelicidadEmpresario(self):
         '''Método que, en caso de que un Empresario esté contento, pone de mejor humor a los demás Trabajadores que tenga cerca. No es una acción, simplemente ocurre de manera pasiva en cada step'''
         
@@ -30,7 +29,7 @@ class Empresario(AgenteBase):
             
             self.modificarVecinos(tipo="Trabajador", felicidad=self.scenario.felicidadContagiarE)
 
-    ###Prime
+
     def generacionPasivaDinero(self):
         '''Método que causa al Empresario ganar una cierta cantidad de dinero en función de la cantidad de Trabajadores que tiene cerca (lo que simula que trabajan para él)'''
 
@@ -44,7 +43,6 @@ class Empresario(AgenteBase):
 
 
     #Acciones que sólo pueden realizar los Empresarios
-    ###Prime
     def invertir(self):
         '''Método con el que el Empresario invierte y gana un porcentaje de su dinero'''
 
@@ -60,7 +58,6 @@ class Empresario(AgenteBase):
         return False
 
 
-    ###Prime
     def bonificacionMonetaria(self):
         '''Método en el que un Empresario da una bonificación monetaria a los Trabajadores cercanos para ponelos de mejor humor. O les paga a todos o a ninguno'''
 
@@ -94,24 +91,35 @@ class Empresario(AgenteBase):
         return False
 
 
-    def step(self):
-        self.actualizarVecinos()
-        self.move()
-
-
-
-
-        #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los Trabajadores cercanos
-        #self.contagiarFelicidadEmpresario()
-
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Empresarios'''
 
         #Cada día obtiene dinero en función de los trabajadores que tiene cerca
         self.generacionPasivaDinero()
 
+
     def avanceSemanalEspecifico(self):
         '''Método que simula el paso de una semana a otra para los Empresarios'''
+        pass
+
 
     def elegirAccion(self):
         '''Método que define qué acciones puede tomar un Empresario en un cierto momento'''
+        pass
+
+
+    def step(self):
+        self.actualizarVecinos()
+
+        #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
+        if self.estaDisponible():            
+
+            self.move()
+            self.elegirAccion()
+
+        else:
+            #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
+            self.ocupado -= 1.0
+
+        #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los Trabajadores cercanos
+        self.contagiarFelicidadEmpresario()
