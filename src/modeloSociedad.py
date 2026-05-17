@@ -328,7 +328,6 @@ class ModeloSociedad(mesa.Model):
         print(f"Datos exportados correctamente como sim_{timestamp}")
 
 
-    ###Prime
     def comprobarAgentesMuertos(self):
         '''Método que analiza todos los agentes y elimina aquellos que estén muertos. Si ya no quedan agentes vivos, acaba la simulación'''
 
@@ -360,7 +359,6 @@ class ModeloSociedad(mesa.Model):
         
 
     
-    ###Prime
     def cambioDia(self):
         '''Método que determina si han pasado 24 horas (steps) para empezar un nuevo día. Empieza los eventos diarios propios de los agentes'''
         
@@ -371,7 +369,6 @@ class ModeloSociedad(mesa.Model):
             #Llamamos al método que se encarga de las modificaciones diarias propias de cada tipo de agente
             self.agents.shuffle_do("avanceDiarioEspecifico")
 
-    ###Prime
     def cambioSemana(self):
         '''Método que determina si han pasado 24 horas (steps) para empezar un nuevo día. Empieza los eventos diarios propios de los agentes'''
         
@@ -380,7 +377,6 @@ class ModeloSociedad(mesa.Model):
             self.agents.shuffle_do("avanceSemanalEspecifico")
 
 
-    ###Prime
     def step(self):        
         '''Paso de tiempo de toda la simulación'''
 

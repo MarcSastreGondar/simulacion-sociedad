@@ -1,13 +1,11 @@
-#¿?¿$"acs"   Agente que hereda de BaseAgent y representa a un inversor, que (¡¡¡INCLUIR CÓMO SE COMPORTA!!!)
 '''
-gashfd
+Agente Empresario, cuyo comportamiento se basa en acumular dinero y dar trabajo a los demás
 '''
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
 from .agente_base import AgenteBase
 
 
-#Agente Empresario, cuyo comportamiento se basa en acumular dinero y dar trabajo a los demás
 class Empresario(AgenteBase):
         
     
