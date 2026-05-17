@@ -12,11 +12,11 @@ def redondearDecimalMedio(valor: float) -> float:
 
 
 def calcular_indice_gini(valores):
-    """
+    '''
     Calcula el coeficiente de Gini para una lista de valores.
-    """
+    '''
     # Convertimos a array de numpy y forzamos el tipo float para evitar errores de casteo
-    array = np.array(valores).flatten().astype(float) # <--- CAMBIO AQUÍ
+    array = np.array(valores).flatten().astype(float)
     
     if len(array) == 0:
         return 0.0
@@ -24,7 +24,7 @@ def calcular_indice_gini(valores):
     if np.amin(array) < 0:
         array -= np.amin(array)
     
-    array += 0.0000001 # Ahora esto funcionará sin errores
+    array += 0.0000001
     array = np.sort(array)
     index = np.arange(1, array.shape[0] + 1)
     n = array.shape[0]
@@ -41,6 +41,7 @@ def calcular_correlacion_felicidad_dinero(df_agentes):
     if df_agentes.empty:
         return 0.0
     return df_agentes['Felicidad'].corr(df_agentes['Dinero'])
+
 
 def obtener_resumen_estadistico(df_agentes):
     '''
