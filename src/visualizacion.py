@@ -15,19 +15,25 @@ from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyl
 from modeloSociedad import ModeloSociedad, EscenarioSociedad
 
 # Definimos cómo se pintan los agentes
-def agent_portrayal(agent):
+def agent_portrayal(agente):
     '''Define cómo se dibuja cada agente en la cuadrícula.'''
     # Determinamos color según el tipo
-    if agent.tipo == "Trabajador":
+    if agente.tipo == "Trabajador":
         color = "#1f77b4"
-    elif agent.tipo == "Empresario":
+    elif agente.tipo == "Empresario":
         color = "#2ca02c"
-    elif agent.tipo == "Antisistema":
+    elif agente.tipo == "Antisistema":
         color = "#d62728"
     else:
         color = "#000000"
 
-    opacidad = 1.0
+    #Determinamos la opacidad dependiendo del estado en el que se encuentre el agente
+    if agente.estado == agente.scenario.estadoFeliz:
+        opacidad = 1.0
+    elif agente.estado == agente.scenario.estadoDeprimido:
+        opacidad = 0.6
+    else:                   #Si está muerto, lo pintamos invisible
+        opacidad = 0
 
     return AgentPortrayalStyle(
         color=color,
@@ -58,13 +64,39 @@ def crearRenderizador(modelo) -> SpaceRenderer:
     return renderizador
 
 
-def botonExportar(modelo):
-    
-    # Definimos el botón de exportación
-    def clickExportarDatos():
-        modelo.exportarDatos()      # Accedemos al modelo que está corriendo actualmente
+def botonEntrenarAgentes(modelo):
+    '''Botón para disparar el entrenamiento masivo episódico en segundo plano'''
+    def clickEntrenar():
 
-    return solara.Button(label="Exportar Datos", on_click=clickExportarDatos, color="primary")
+        print(f"\nEmpezando entrenamiento para {modelo.episodiosEntrenamiento} episodios...")
+        modelo.entrenamientoAgentes()
+        print("Entrenamiento finalizado. Ya se puede hacer una simulación con el conocimiento aprendido.")
+
+    return solara.Button(label="Entrenar Agentes", on_click=clickEntrenar, color="success")
+
+def botonExportarEntrenamiento(modelo):
+    '''Botón para guardar exclusivamente la matriz de pesos del modelo RL en JSON.'''
+    def clickExportarPesos():
+        modelo.exportarPesosAgentes()
+
+    return solara.Button(label=" Exportar Entrenamiento Agentes", on_click=clickExportarPesos, color="info")
+
+def botonImportarEntrenamiento(modelo):
+    '''Botón para forzar la inyección de matrices Q guardadas en el modelo.'''
+    def clickImportar():
+        modelo.importarDatos()
+
+    return solara.Button(label="Importar Preentrenamiento de Agentes", on_click=clickImportar, color="secondary")
+
+
+def botonExportarSimulacion(modelo):
+    '''Botón para guardar exclusivamente los CSVs de métricas del DataCollector.'''
+    def clickExportarMétricas():
+        modelo.exportarDatosSimulacion()
+
+    return solara.Button(label=" Exportar Datos Simulación Actual", on_click=clickExportarMétricas, color="primary")
+
+
 
 # Instanciamos el escenario para obtener los valores por defecto
 escenario = EscenarioSociedad()
@@ -73,8 +105,8 @@ escenario = EscenarioSociedad()
 n_trabajadores = escenario.n_trabajadores
 n_empresarios = escenario.n_empresarios
 n_antisistemas = escenario.n_antisistemas
-visionAgente = escenario.visionAgente
 porcentajeAleatorio = escenario.porcentajeAleatorio
+episodiosEntrenamiento = escenario.episodiosEntrenamiento
 
 
 #Definimos los parámetros que se utilizarán en las simulaciones
@@ -82,14 +114,18 @@ model_params = {
     # Parámetros editables en la interfaz gráfica
     "n_trabajadores": Slider("Cantidad de Trabajadores", n_trabajadores, 0, 1000, 10),
     "n_empresarios": Slider("Cantidad de Empresarios", n_empresarios, 0, 1000, 10),
-    "n_antisistemas": Slider("Cantidad de Agentes Antisistema", n_antisistemas, 0, 1000, 10),
-    "visionAgente": Slider("Visión Agentes", visionAgente, 0, 10, 1),
+    "n_antisistemas": Slider("Cantidad de Antisistema", n_antisistemas, 0, 1000, 10),
     "porcentajeAleatorio": Slider("Variabilidad Inicial", porcentajeAleatorio, 0.0, 1.0, 0.1),
+    "episodiosEntrenamiento": Slider("Ciclos Entrenamiento", episodiosEntrenamiento, 10, 1000, 10),
     
     # Parámetros fijos
     "anchuraGrid": escenario.anchuraGrid,
     "alturaGrid": escenario.alturaGrid,
     "rng": escenario.rng,
+    "estadoFeliz": escenario.estadoFeliz,
+    "estadoDeprimido": escenario.estadoDeprimido,
+    "estadoMuerto": escenario.estadoMuerto,
+    "visionAgente": escenario.visionAgente,
     "tiempoMaxPosible": escenario.tiempoMaxPosible,
     "tiempoVital": escenario.tiempoVital,
     "energiaMax": escenario.energiaMax,
@@ -98,11 +134,21 @@ model_params = {
     "felicidadMax": escenario.felicidadMax,
     "umbralDepresion": escenario.umbralDepresion,
     "mesesSuicidio": escenario.mesesSuicidio,
-    "movimientoAgente": escenario.movimientoAgente,
     "reduccionDiariaFelicidad": escenario.reduccionDiariaFelicidad,
     "porcentajeGastosCuotidianos": escenario.porcentajeGastosCuotidianos,
     "gastosDiariosMin": escenario.gastosDiariosMin,
     "gastosDiariosMax": escenario.gastosDiariosMax,
+
+    "movimientoAgente": escenario.movimientoAgente,
+    "maxStepsCiclo": escenario.maxStepsCiclo,
+    "alfaQ": escenario.alfaQ,
+    "gammaQ": escenario.gammaQ,
+    "epsilonQ": escenario.epsilonQ,
+    "epsilonMinimo": escenario.epsilonMinimo,
+    "porcentajePocaEnergiaQ": escenario.porcentajePocaEnergiaQ,
+    "porcentajeMediaEnergiaQ": escenario.porcentajeMediaEnergiaQ,
+    "divisionPocoDinero": escenario.divisionPocoDinero,
+    "multiplicacionMedioDinero": escenario.multiplicacionMedioDinero,
 
     "dineroInicialT": escenario.dineroInicialT,
     "felicidadInicialT": escenario.felicidadInicialT,
@@ -145,6 +191,13 @@ model_params = {
     "maxTiempoAlTrabajo": escenario.maxTiempoAlTrabajo,
     "energiaTrabajar": escenario.energiaTrabajar,
     "felicidadTrabajar": escenario.felicidadTrabajar,
+    "felicidadMaxTrabajar": escenario.felicidadMaxTrabajar,
+    "energiaEstudiar": escenario.energiaEstudiar,
+    "felicidadEstudiar": escenario.felicidadEstudiar,
+    "costeEstudiar": escenario.costeEstudiar,
+    "aumentoSueldoEstudiar": escenario.aumentoSueldoEstudiar,
+    "aumentoFelicidadTrabajoEstudiar": escenario.aumentoFelicidadTrabajoEstudiar,
+    "tiempoEstudiar": escenario.tiempoEstudiar,
     "reduccionEnergiaMaxDobleTrabajo": escenario.reduccionEnergiaMaxDobleTrabajo,
     "porcentajeSueldoTeletrabajo": escenario.porcentajeSueldoTeletrabajo,
     "porcentajeEnergiaTeletrabajo": escenario.porcentajeEnergiaTeletrabajo,
@@ -161,6 +214,7 @@ model_params = {
     "tiempoBonificacion": escenario.tiempoBonificacion,
     "umbralContagiarFelicidadE": escenario.umbralContagiarFelicidadE,
     "felicidadContagiarE": escenario.felicidadContagiarE,
+    "dineroPasivoPorTrabajador": escenario.dineroPasivoPorTrabajador,
 
     "porcentajeDineroRobado": escenario.porcentajeDineroRobado,
     "felicidadAtracado": escenario.felicidadAtracado,
@@ -185,7 +239,7 @@ model_params = {
 
 
 # Instanciamos el modelo. Es vital para el correcto funcionamiento que el nombre de los parámetros que se pasen sea el mismo que el nombre de la variable que los recibe
-modeloSociedad = ModeloSociedad(n_trabajadores=n_trabajadores,n_empresarios=n_empresarios, n_antisistemas=n_antisistemas)
+modeloSociedad = ModeloSociedad(n_trabajadores=n_trabajadores,n_empresarios=n_empresarios, n_antisistemas=n_antisistemas, episodiosEntrenamiento=episodiosEntrenamiento)
 
 #Gráficos para enseñar la evolución de estadísticas
 #Gráficos generales
@@ -213,13 +267,18 @@ page = SolaraViz(
     modeloSociedad,
     model_params=model_params,
     renderer=crearRenderizador(modeloSociedad),
-    components=[botonExportar,
-                graficoFelicidadMedia, graficoEnergiaMedia, graficoDineroMedio,
-                graficoFelicidadMediaT, graficoEnergiaMediaT, graficoDineroMedioT,
-                graficoFelicidadMediaE, graficoEnergiaMediaE, graficoDineroMedioE,
-                graficoFelicidadMediaA, graficoEnergiaMediaA, graficoDineroMedioA],
+    components=[
+        botonEntrenarAgentes,
+        botonExportarEntrenamiento,
+        botonImportarEntrenamiento,
+        botonExportarSimulacion,
+        graficoFelicidadMedia, graficoEnergiaMedia, graficoDineroMedio,
+        graficoFelicidadMediaT, graficoEnergiaMediaT, graficoDineroMedioT,
+        graficoFelicidadMediaE, graficoEnergiaMediaE, graficoDineroMedioE,
+        graficoFelicidadMediaA, graficoEnergiaMediaA, graficoDineroMedioA
+    ],
     name="Simulación Sociedad"
 )
 
-# Ejecutamos la página web con la visualización
+
 page

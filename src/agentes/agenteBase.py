@@ -1,6 +1,5 @@
-#¿?¿$"acs"   Documento con el código común entre los distintos agentes para evitar la repetición de código
 '''
-gashfd
+Documento con el código común entre los distintos agentes para evitar la repetición de código
 '''
 
 #Importamos la clase con el agente por defecto de Mesa
@@ -10,17 +9,42 @@ from mesa.discrete_space import Cell
 from metricas import *
 
 class AgenteBase(mesa.discrete_space.CellAgent):
-    """Clase base que contiene atributos y métodos comunes a todos los agentes."""
+    '''Clase base que contiene atributos y métodos comunes a todos los agentes.'''
 
-    def __init__(self, modelo, dineroInicial, felicidadInicial):
+    def __init__(self, modelo, dineroInicial, felicidadInicial, accionesEspecificas):
         super().__init__(modelo)
+
+        # Definimos las acciones posibles que podrá realizar el agente
+        accionesGenerales = ["move", "dormir", "entrenarGimnasio", "compraLujosa", "ocio", "comidaBasura"]
+
+        if accionesEspecificas is None:
+            accionesEspecificas = []
+
+        self.listaAcciones = accionesGenerales + accionesEspecificas
 
         # Definimos los atributos comunes entre todos los agentes
         #Usamos el mismo RandomNumberGenerator que tiene el modelo
         self.aleat = modelo.rng
         
         self.tipo = "Ninguno"
-        self.estado = "Feliz"        
+
+        self.dineroInicial = dineroInicial
+        self.felicidadInicial = felicidadInicial
+
+
+        #Atributos para el aprendizaje por refuerzo
+        # Estructura de la Tabla Q dinámica por agente
+        # Formato: {(rango_energia, rango_dinero, rango_tiempo): [Q_act0, Q_act1, ..., Q_actN]}
+        self.tablaQ = {}
+        self.epsilon = self.scenario.epsilonQ
+
+
+
+    def reiniciarGeneral(self):
+        ''' Método que instancia las variables del agente con el valor por defecto. Es muy importante que se llame a este método desde 
+            el reiniciar() implementado por los agentes y que, a su vez, el reiniciar() se llame desde el __init__ de los agentes específicos'''
+        
+        self.estado = self.scenario.estadoFeliz       
 
         self.visionAgente = self.scenario.visionAgente
         self.visionMovimiento = self.scenario.movimientoAgente
@@ -37,17 +61,17 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.porcentajeAleatorio = self.scenario.porcentajeAleatorio
 
         #Cantidad de dinero que posee un agente en un cierto momento
-        dineroAleat = self.porcentajeAleatorio * dineroInicial
+        dineroAleat = self.porcentajeAleatorio * self.dineroInicial
         dineroAleat = self.aleat.uniform(-dineroAleat, dineroAleat)    #Introducimos aleatoriedad en la cantidad de dinero que tendrá cada agente inicialmente (+- un porcentaje)        
-        self.dinero = int(dineroInicial + dineroAleat)
+        self.dinero = int(self.dineroInicial + dineroAleat)
 
 
         #Grado de desagrado por la situación en la que se encuentra el agente. Entre 0 (mínimo) y 100 (máximo)
-        felicidadAleat = self.porcentajeAleatorio * felicidadInicial
+        felicidadAleat = self.porcentajeAleatorio * self.felicidadInicial
         felicidadAleat = self.aleat.uniform(-felicidadAleat, felicidadAleat)   #+- un porcentaje del que tiene inicialmente
         
         self.felicidad = 0.0                                                          #Inicializamos el valor de la felicidad para poder modificarlo en el método
-        valFelicidad = felicidadInicial + felicidadAleat
+        valFelicidad = self.felicidadInicial + felicidadAleat
         self.modificarEnergiaFelicidadDinero(felicidad=valFelicidad)
         
 
@@ -60,10 +84,63 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.tiempoMensualidadGym = 0       #Empieza sin estar suscrito al gimnasio
         self.contadorComidaBasura = 0       #Empieza no pudiendo comer
 
+        # Variables para la ecuación de Bellman
+        self.estadoAnterior = None
+        self.accionAnterior = None
+        self.felicidadAnterior = self.felicidad
+
 
     # Métodos comunes de los agentes
-    # Métodos auxiliares
+    #Métodos relacionados con el Q-Learning
+    def obtenerEstado(self):
+        '''
+        Traduce los recursos continuos del agente (Energía, Dinero, Tiempo) en valores discretos (0: Bajo, 1: Medio, 2: Alto) para la Tabla Q.
+        Devuelve una tupla (rango_energia, rango_dinero, rango_tiempo)
+        '''
 
+        #Discretizamos la Energía
+        #Los valores frontera no dependen del tipo de agente
+        if self.energia < (self.scenario.energiaMax * self.scenario.porcentajePocaEnergiaQ):        #Depende de la energía con la que empiezan los agentes
+            rango_energia = 0  # Bajo
+        elif self.energia < (self.scenario.energiaMax * self.scenario.porcentajeMediaEnergiaQ):
+            rango_energia = 1  # Medio
+        else:
+            rango_energia = 2  # Alto
+
+        # Discretizamos el Dinero
+        if self.dinero < (self.scenario.sueldoMedio / self.scenario.divisionPocoDinero):      #Dependerá del sueldo medio de los trabajadores que hay al inicio de la simulación
+            rango_dinero = 0   # Bajo
+        elif self.dinero < (self.scenario.sueldoMedio * self.scenario.multiplicacionMedioDinero):
+            rango_dinero = 1   # Medio
+        else:
+            rango_dinero = 2   # Alto
+
+        #Discretizamos el tiempo disponible
+        tercio_tiempo = (self.scenario.tiempoMaxPosible - self.scenario.tiempoVital) / 3.0
+        if self.tiempoDisponible < tercio_tiempo:
+            rango_tiempo = 0   # Poco tiempo
+        elif self.tiempoDisponible < (tercio_tiempo * 2):
+            rango_tiempo = 1   # Tiempo medio
+        else:
+            rango_tiempo = 2   # Mucho tiempo disponible
+
+        estadoActual = (rango_energia, rango_dinero, rango_tiempo)
+
+        # Si el estado no ha sido visitado nunca, inicializamos sus valores Q en cero
+        if estadoActual not in self.tablaQ:
+            self.tablaQ[estadoActual] = [0.0] * len(self.listaAcciones)
+
+        return estadoActual
+    
+
+    def calcularRecompensa(self):
+        '''
+        Calcula la recompensa inmediata del agente basada en la variación de la felicidad. R = felicidad_actual - felicidadAnterior
+        '''
+        return self.felicidad - self.felicidadAnterior
+
+
+    # Métodos auxiliares
     def actualizarVecinos(self):
         '''Miramos las casillas cercanas al agente y detectamos cuales son sus vecinos. Debería llamarse al principio de cada step para evitar errores'''
         #Obtenemos los vecinos que tiene el agente alrededor (en su campo visual)
@@ -79,8 +156,18 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         '''Método que elimina permanentemente de la simulación a un agente. Es equivalente a la muerte de una persona y 
            los agentes deben intentar evitarla a toda costa'''
         
-        #Actualizamos su estado a muerto (se eliminará desde el modelo)
-        self.estado = "Muerto"
+        # Si estamos entrenando y hay un historial de acciones, castigamos fuertemente la muerte
+        if self.model.modoEntrenamiento and self.estadoAnterior is not None and self.accionAnterior is not None:
+            recompensaMuerte = -1000.0
+
+            # Como al morir no hay próximo estado, el valor futuro esperado será 0
+            qModificar = self.tablaQ[self.estadoAnterior][self.accionAnterior]
+            
+            # Aplicamos la ecuación de Bellman sin valor futuro Q(s,a) = Q(s,a) + alpha * (R - Q(s,a))
+            self.tablaQ[self.estadoAnterior][self.accionAnterior] = qModificar + self.scenario.alfaQ * (recompensaMuerte - qModificar)
+
+        # Actualizamos su estado a muerto (se eliminará desde el modelo)
+        self.estado = self.scenario.estadoMuerto
 
 
 
@@ -237,14 +324,9 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             nuevaPosicion = self.random.choice(self.casillasVacias)
             self.move_to(nuevaPosicion)
         
-    def dormir(self, horas):
+    def dormir(self):
         '''Dormir para recuperar energia'''
-        #Comprobamos que no pretenda dormir o demasiado o demasiado poco tiempo
-        if horas < self.scenario.horasMinimasDormir:
-            horas = self.scenario.horasMinimasDormir
-
-        if horas > self.scenario.horasMaximasDormir:
-            horas = self.scenario.horasMaximasDormir
+        horas = self.scenario.horasMaximasDormir        #Intenta dormir la máxima cantidad de horas posibles
 
         #Nos aseguramos de que duerma una cantidad de tiempo fácilmente controlable
         redondearDecimalMedio(horas)
@@ -360,7 +442,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         if self.felicidad < self.scenario.umbralDepresion:
             self.diasDepresion += 1
 
-            self.estado = "Deprimido"
+            self.estado = self.scenario.estadoDeprimido
 
             #Si lleva demasiado tiempo deprimido, borramos el agente
             if self.diasDepresion >= self.diasSuicidio:
@@ -370,7 +452,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             #Si no está deprimido, disminuimos sus dias con depresión
             self.diasDepresion -= 3
 
-            self.estado = "Feliz"
+            self.estado = self.scenario.estadoFeliz
 
             #Aseguramos que no sea menor al mínimo
             if self.diasDepresion < 0:
@@ -401,6 +483,57 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.modificarEnergiaFelicidadDinero(felicidad=reduccionFelicidad, dinero=self.gastosCuotidianos)
 
 
+    def elegirAccion(self):
+        '''
+        Aplica la política epsilon-greedy usando el espacio dinámico de acciones. Ejecuta el método mapeado y gestiona el feedback del Q-Learning.
+        '''
+        # Obtenemos el estado actual (s')
+        estadoActual = self.obtenerEstado()
+
+        # Si ya hemos hecho una acción anteriormente, actualizamos la tabla Q
+        if self.estadoAnterior is not None and self.accionAnterior is not None:
+            recompensa = self.calcularRecompensa()
+
+            # Q(s,a) = Q(s,a) + alpha * (R + gamma * max(Q(s', a')) - Q(s,a))
+            qModificar = self.tablaQ[self.estadoAnterior][self.accionAnterior]
+            maxQFuturo = max(self.tablaQ[estadoActual])
+
+            self.tablaQ[self.estadoAnterior][self.accionAnterior] = qModificar + self.scenario.alfaQ * (recompensa + self.scenario.gammaQ * maxQFuturo - qModificar)
+
+        # Actualizamos la felicidad anterior para el próximo cálculo
+        self.felicidadAnterior = self.felicidad
+
+
+        #Seleccionamos una acción usando Epsilon-Greedy con decaimiento
+        if self.model.modoEntrenamiento:
+            epsilon = self.epsilon  # Usa el epsilon con decay que disminuye en el tiempo
+        else:
+            epsilon = self.scenario.epsilonMinimo  # Valor mínimo o 0 en fase de explotación/simulación
+
+        if self.aleat.random() < epsilon:       #####Revisar si el random está bien
+            # Exploramos con un índice aleatorio
+            idxAccion = self.aleat.integers(0, len(self.listaAcciones))
+        else:
+            # Explotamos usando el índice de la acción que tiene un valor máximo en la tabla Q desde este estado
+            idxAccion = int(np.argmax(self.tablaQ[estadoActual]))
+
+
+        #Ejecutamos la acción
+        nombreAccion = self.listaAcciones[idxAccion]
+
+        accion = getattr(self, nombreAccion)
+
+        realizada = accion() 
+
+        # Si la acción no se ha podido realizar por falta de recursos, lo penalizamos un poco
+        if not realizada:
+            self.tablaQ[estadoActual][idxAccion] -= 2.0 
+
+        #Este estado y acción pasan a ser los últimos, para el próximo step
+        self.estadoAnterior = estadoActual
+        self.accionAnterior = idxAccion
+
+
     #Métodos que deben ser sobreescritos por los hijos
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro en las circunstancias específicas para cada tipo de agente. Cada tipo de agente debe
@@ -415,8 +548,5 @@ class AgenteBase(mesa.discrete_space.CellAgent):
     def step(self):
         '''Método que define qué deben hacer los agentes en cada step, el cual representa 1 hora'''
         raise NotImplementedError("Los agentes deben implementar el método step()")
-    
-    def elegirAccion(self):
-        """Método que define qué acciones puede tomar un agente en un cierto momento"""
-        raise NotImplementedError("Los agentes deben implementar el método elegirAccion()")
+
     

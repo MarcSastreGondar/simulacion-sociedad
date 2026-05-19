@@ -3,7 +3,7 @@ Agente Empresario, cuyo comportamiento se basa en acumular dinero y dar trabajo 
 '''
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
-from .agente_base import AgenteBase
+from .agenteBase import AgenteBase
 
 
 class Empresario(AgenteBase):
@@ -11,11 +11,20 @@ class Empresario(AgenteBase):
     
     def __init__(self, modelo):
         
+        #Instanciamos las acciones específicas de su tipo que puede realizar
+        acciones_empresario = ["invertir", "bonificacionMonetaria"]
+
         # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
-        super().__init__(modelo, modelo.scenario.dineroInicialE, modelo.scenario.felicidadInicialE)
+        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialE, felicidadInicial=modelo.scenario.felicidadInicialE, accionesEspecificas=acciones_empresario)
 
         self.tipo = "Empresario"
 
+        self.reiniciar()            #Instanciamos los valores que pueden llegar a ser reiniciados
+
+
+    def reiniciar(self):
+        '''Método que instancia las variables del Empresario con el valor por defecto'''
+        self.reiniciarGeneral()
 
 
     #Métodos auxiliares
@@ -89,6 +98,7 @@ class Empresario(AgenteBase):
         return False
 
 
+    #Métodos relacionados con el flujo de los agentes
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Empresarios'''
 
@@ -101,23 +111,21 @@ class Empresario(AgenteBase):
         pass
 
 
-    def elegirAccion(self):
-        '''Método que define qué acciones puede tomar un Empresario en un cierto momento'''
-        pass
-
-
     def step(self):
-        self.actualizarVecinos()
 
-        #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
-        if self.estaDisponible():            
-
-            self.move()
-            self.elegirAccion()
-
-        else:
-            #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
-            self.ocupado -= 1.0
-
-        #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los Trabajadores cercanos
-        self.contagiarFelicidadEmpresario()
+        #Sólo participa en el funcionamiento del modelo si está vivo
+        if self.estado != self.scenario.estadoMuerto:
+            self.actualizarVecinos()
+    
+            #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
+            if self.estaDisponible():            
+            
+                self.move()
+                self.elegirAccion()
+    
+            else:
+                #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
+                self.ocupado -= 1.0
+    
+            #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los Trabajadores cercanos
+            self.contagiarFelicidadEmpresario()

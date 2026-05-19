@@ -4,7 +4,7 @@ gashfd
 '''
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
-from .agente_base import AgenteBase
+from .agenteBase import AgenteBase
 
 
 #Agente Antisistema, cuyo comportamiento se basa en no querer trabajar, aprovecharse de los demás y intentar causar revueltas
@@ -12,14 +12,22 @@ class Antisistema(AgenteBase):
         
     
     def __init__(self, modelo):
-        
+        #Instanciamos las acciones específicas de su tipo que puede realizar
+        acciones_antisistema = ["atracar", "quejarse", "vandalismo"]
+
         # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
-        super().__init__(modelo, modelo.scenario.dineroInicialA, modelo.scenario.dineroInicialA)
+        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialA, felicidadInicial=modelo.scenario.felicidadInicialA, accionesEspecificas=acciones_antisistema)
         
         self.tipo = "Antisistema"
 
-        self.odioSocial = 0         #Cantidad de odio que sienten los demás miembros de la sociedad hacia él. Si tiene demasiado, se le expulsa de la sociedad
+        self.reiniciar()            #Instanciamos los valores que pueden llegar a ser reiniciados
 
+
+    def reiniciar(self):
+        '''Método que instancia las variables del Antisistema con el valor por defecto'''
+        self.reiniciarGeneral()
+
+        self.odioSocial = 0         #Cantidad de odio que sienten los demás miembros de la sociedad hacia él. Si tiene demasiado, se le expulsa de la sociedad
 
     #Métodos auxiliares
     def comprobarOdioSocial(self):
@@ -82,7 +90,6 @@ class Antisistema(AgenteBase):
         #Si no se ha podido atracar a nadie, se devuelve False
         return False
 
-
     
     def quejarse(self):
         '''Acción de que el Antisistema transmita sus quejas sobre el sistema a los agentes que tenga cerca'''
@@ -96,6 +103,7 @@ class Antisistema(AgenteBase):
             #Modificamos los recursos del Antisistema
             self.modificarEnergiaFelicidadDinero(energia=self.scenario.energiaQuejarse, felicidad=self.scenario.felicidadQuejarse)
             self.ocupar(self.scenario.tiempoQuejarse)
+
 
     def vandalismo(self):
         '''Acción de romper, pintar o ensuciar propiedades de Empresarios con el fin de tener un impacto negativo sobre estos'''
@@ -128,34 +136,34 @@ class Antisistema(AgenteBase):
         return False
         
 
+    #Métodos relacionados con el flujo de los agentes
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Antisistema'''
+
 
     def avanceSemanalEspecifico(self):
         '''Método que simula el paso de una semana a otra para los Antisistema'''
         self.modificarOdioSocial(self.scenario.reduccionPasivaOdio)
 
 
-    def elegirAccion(self):
-        """Método que define qué acciones puede tomar un Antisistema en un cierto momento"""
-        pass
-
-
     def step(self):
-        #Comprobamos si el agente es demasiado odiado
-        self.comprobarOdioSocial()
+        #Sólo participa en el funcionamiento de la simulación si está vivo
+        if self.estado != self.scenario.estadoMuerto:
 
-        self.actualizarVecinos()
+            #Comprobamos si el agente es demasiado odiado
+            self.comprobarOdioSocial()
 
-        #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
-        if self.estaDisponible():            
+            self.actualizarVecinos()
 
-            self.move()
-            self.elegirAccion()
+            #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
+            if self.estaDisponible():            
 
-        else:
-            #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
-            self.ocupado -= 1.0
+                self.move()
+                self.elegirAccion()
 
-        #Antes de acabar el paso, si no está feliz, contagia su infelicidad a los agentes cercanos
-        self.contagiarOdio()
+            else:
+                #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
+                self.ocupado -= 1.0
+
+            #Antes de acabar el paso, si no está feliz, contagia su infelicidad a los agentes cercanos
+            self.contagiarOdio()

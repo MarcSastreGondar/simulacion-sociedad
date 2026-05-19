@@ -11,6 +11,16 @@ def redondearDecimalMedio(valor: float) -> float:
         return round(valor * 2) / 2
 
 
+# Función auxiliar para poder recolectar los datos de manera segura sin que haya errores
+def mediaSegura(agentes, atributo):
+    #Si no hay agentes de este tipo, se devuelve una media de 0
+    if len(agentes) == 0:
+        return 0.0 
+    
+    #Si hay agentes sobre los que calcular la media, simplemente se calcula
+    return agentes.agg(atributo, np.mean)
+
+
 def calcular_indice_gini(valores):
     '''
     Calcula el coeficiente de Gini para una lista de valores.

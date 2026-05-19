@@ -4,7 +4,7 @@ gashfd
 '''
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
-from .agente_base import AgenteBase
+from .agenteBase import AgenteBase
 import mesa
 
 from metricas import *
@@ -14,12 +14,21 @@ class Trabajador(AgenteBase):
         
     
     def __init__(self, modelo):
-        
+        #Instanciamos las acciones específicas de su tipo que puede realizar
+        acciones_trabajador = ["trabajar", "trabajarDoble", "teletrabajar", "estudiar"]
+
         # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
-        super().__init__(modelo, modelo.scenario.dineroInicialT, modelo.scenario.felicidadInicialT)
+        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialT, felicidadInicial=modelo.scenario.felicidadInicialT, accionesEspecificas=acciones_trabajador)
 
         self.tipo = "Trabajador"            
-        
+                               
+        self.reiniciar()    #Instanciamos el valor de sus variables
+
+
+    def reiniciar(self):
+        '''Método que instancia las variables del Trabajador con el valor por defecto'''
+        self.reiniciarGeneral()
+
         #Obtenemos la cantidad de tiempo que pasa trabajando presencialmente el agente
         self.tiempoAlTrabajo = self.aleat.uniform(0.25, self.scenario.maxTiempoAlTrabajo)     #Añadimos aleatoriedad en la cantidad de tiempo que necesita un agente para ir y volver del trabajo (entre 20 minutos y el tiempo introducido)
         self.tiempoPresencialTrabajo = self.scenario.tiempoTrabajo + self.tiempoAlTrabajo
@@ -36,8 +45,8 @@ class Trabajador(AgenteBase):
         parteAleatoria = int(self.aleat.uniform(-parteAleatoria, parteAleatoria))
 
         self.dineroDiaTrabajo = 0                                       #Para evitar posibles errores
-        self.modificarCondicionesLaborales(dinero=parteAleatoria)                           
-        
+        self.modificarCondicionesLaborales(dinero=parteAleatoria)    
+
 
 
     #Métodos auxiliares 
@@ -160,7 +169,7 @@ class Trabajador(AgenteBase):
         if(self.diasLaborablesPendientes > 0):
 
             #Elegimos qué jornada laboral va a tener. En caso de estar ocupado, seguirá asistiendo al trabajo igualmente (simplemente se añadirán más horas a su contador)
-            opcion = self.aleat.integers(0,2)    ##########
+            opcion = self.aleat.integers(0,3)    ##########
             ##########
             trabajado = False
             if opcion == 0:
@@ -175,27 +184,25 @@ class Trabajador(AgenteBase):
             
             self.diasLaborablesPendientes -= 1      #Restamos en 1 la cantidad de días que puede trabajar el agente esta semana
 
-    
-    def elegirAccion(self):
-        '''Método que define qué acciones puede tomar un Trabajador en un cierto momento'''
-        pass
-
 
     def step(self):
         '''Definimos lo que puede hacer cada agente en su tiempo libre'''
-        self.actualizarVecinos()
-
-
-        #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
-        if self.estaDisponible():        
-
-            self.move()
-            self.elegirAccion()
-
-        else:
-            #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
-            self.ocupado -= 1.0
         
-        #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los agentes cercanos
-        self.contagiarFelicidadTrabajador()
+        #Sólo participa en el funcionamiento del modelo si está vivo
+        if self.estado != self.scenario.estadoMuerto:
+            self.actualizarVecinos()
+
+
+            #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
+            if self.estaDisponible():        
+
+                self.move()
+                self.elegirAccion()
+
+            else:
+                #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
+                self.ocupado -= 1.0
+
+            #Antes de acabar el paso, si está muy feliz, contagia su felicidad a los agentes cercanos
+            self.contagiarFelicidadTrabajador()
         

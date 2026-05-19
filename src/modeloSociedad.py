@@ -7,6 +7,9 @@ gashfd
 import os
 from datetime import datetime
 
+import json
+
+
 import mesa
 from mesa.experimental.scenarios import Scenario
 from mesa.time import Schedule
@@ -20,6 +23,8 @@ from agentes.trabajador import Trabajador
 from agentes.empresario import Empresario
 from agentes.antisistema import Antisistema
 
+from metricas import mediaSegura
+
 '''Escenario de la sociedad, el cual contiene todos los parámetros de la ejecución. El valor de los parámetros de los recursos (como la energia, felicidad, etc.) deben ser
    positivos en caso de que quiera que se aumenten o negativos si se quieren disminuir excepto en el caso del tiempo, que debe ser siempre positivo.'''
 class EscenarioSociedad(Scenario):
@@ -31,6 +36,12 @@ class EscenarioSociedad(Scenario):
     rng: int = 150
 
     # Parámetros de configuración de los agentes en general
+
+    #Estados posibles
+    estadoFeliz: str = "Feliz"
+    estadoDeprimido: str = "Deprimido"
+    estadoMuerto: str = "Muerto"
+
     #Variables relacionadas con el tiempo del que dispone el agente para actuar cada día
     tiempoMaxPosible: float = 24.0            #Tiempo en horas que el agente tiene disponibles en un dia
     tiempoVital: float = 2.0                  #Tiempo en horas que se utiliza en hacer acciones necesarias para la supervivencia (comida, higiene, etc.). No incluye dormir
@@ -50,11 +61,27 @@ class EscenarioSociedad(Scenario):
     porcentajeAleatorio: float = 0.25
 
     umbralDepresion: float = 10.0        #A partir de qué punto de felicidad empezamos a considerar que el agente tiene depresión
-    mesesSuicidio: int = 5          #Cantidad de meses con depresión acumulados que llevan al agente a ser borrado
+    mesesSuicidio: int = 6               #Cantidad de meses con depresión acumulados que llevan al agente a ser borrado
 
 
     visionAgente: int = 3           #Distancia a la que los agentes pueden ver, en todas direcciones
     movimientoAgente: int = 2       #Distancia a la que se pueden, como máximo, mover los agentes, en todas direcciones
+
+    #Relacionados con el Entrenamiento de los agentes y el Q-Learning
+    episodiosEntrenamiento: int = 30       #Cantidad de simulaciones enteras que deben realizarse para entrenar a los agentes
+    maxStepsCiclo: int = 50       #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
+    
+    alfaQ: float = 0.1
+    gammaQ: float = 0.9
+    epsilonQ: float = 1.0
+    epsilonMinimo: float = 0.01     #Siempre al menos un 1% de probabilidades de realizar una acción aleatoria
+
+
+    porcentajePocaEnergiaQ: float = 0.33        #Poca energía si energiaAgente < energiaMax * porcentajePocaEnergiaQ
+    porcentajeMediaEnergiaQ: float = 0.66       #Media energía si energiaAgente < energiaMax * porcentajeMediaEnergiaQ
+
+    divisionPocoDinero: int = 5                 #Dinero bajo si dineroAgente < sueldoMedio / divisionPocoDinero
+    multiplicacionMedioDinero: int = 2          #Dinero alto si dineroAgente > sueldoMedio * multiplicacionMedioDinero
 
 
     #Cambios temporales en los recursos de los agentes
@@ -69,7 +96,7 @@ class EscenarioSociedad(Scenario):
     dineroInicialT: int = 500
     felicidadInicialT: float = 85
     sueldoMinimo: int = 600
-    sueldoMedio: int = 1500                 #Dinero de 1 sueldo completo al mes.
+    sueldoMedio: int = 1200                 #Dinero de 1 sueldo completo al mes.
     diasLaborablesSemanales: int = 5        #Cantidad de días que trabajarán cada semana (no podrán trabajar ni más ni menos)
     diasLaborablesAlMes: int = 22           #Suponemos que trabajan, de media, 22 días al mes
 
@@ -201,19 +228,10 @@ class EscenarioSociedad(Scenario):
 
     
 
-# Función auxiliar para poder recolectar los datos de manera segura sin que haya errores
-def media_segura(agentes, atributo):
-    #Si no hay agentes de este tipo, se devuelve una media de 0
-    if len(agentes) == 0:
-        return 0.0 
-    
-    #Si hay agentes sobre los que calcular la media, simplemente se calcula
-    return agentes.agg(atributo, np.mean)
-
 '''Modelo principal de la simulación'''
 class ModeloSociedad(mesa.Model):    
     
-    def __init__(self, n_trabajadores=10, n_empresarios=5, n_antisistemas=5):
+    def __init__(self, n_trabajadores=10, n_empresarios=5, n_antisistemas=5, episodiosEntrenamiento=10):
         
         #Instanciamos el escenario con los parámetros que se utilizarán para configurar la simulación
         escenario = EscenarioSociedad()        
@@ -231,9 +249,16 @@ class ModeloSociedad(mesa.Model):
     
         super().__init__(scenario=escenario)
 
+        self.modoEntrenamiento = False  # Si es True, entrenamiento (actualiza la matriz Q). Si es False, es una simulación con lo que ya se sabe
+        self.episodiosEntrenamiento = episodiosEntrenamiento
+
+        self.n_trabajadores = n_trabajadores
+        self.n_empresarios = n_empresarios
+        self.n_antisistemas = n_antisistemas
+
         # Creamos las casillas en las que pueden moverse los agentes
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((self.scenario.anchuraGrid, self.scenario.alturaGrid), torus=True, random=self.random)  #torus = True para que los bordes del mapa están conectados entre sí
-
+        
         # Creamos los agentes de cada tipo
         self.trabajadores = Trabajador.create_agents(self, n_trabajadores)
         
@@ -241,15 +266,7 @@ class ModeloSociedad(mesa.Model):
         
         self.antisistemas = Antisistema.create_agents(self, n_antisistemas)        
 
-
-        # Recorremos cada agente de la lista de agentes y le asignamos una casilla aleatoria
-        for agente in self.agents:                
-            agente.cell = self.grid.all_cells.select_random_cell()
-        
-
-        #####TEMP!!!! Hacemos algunos step de cada agente para verificar que funcionan correctamente. De esta manera, nos saltará un error detallado al
-        #ejecutar (en el gráfico de Solara los errores no son nada descriptivos o ni aparecen)
-        self.agents.shuffle_do("step")
+        self.colocarAgentes()
 
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
         
@@ -258,24 +275,24 @@ class ModeloSociedad(mesa.Model):
         #Datos recogidos del modelo
         model_reporters={
             # Gráficos generales
-            "Felicidad Media": lambda m: media_segura(m.agents, "felicidad"),
-            "Energia Media": lambda m: media_segura(m.agents, "energia"),
-            "Dinero Medio": lambda m: media_segura(m.agents, "dinero"),
+            "Felicidad Media": lambda m: mediaSegura(m.agents, "felicidad"),
+            "Energia Media": lambda m: mediaSegura(m.agents, "energia"),
+            "Dinero Medio": lambda m: mediaSegura(m.agents, "dinero"),
 
             # Específicos de Trabajadores con chequeo de existencia
-            "Felicidad Media Trabajadores": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Trabajador"), "felicidad"),
-            "Energia Media Trabajadores": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Trabajador"), "energia"),
-            "Dinero Medio Trabajadores": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Trabajador"), "dinero"),
+            "Felicidad Media Trabajadores": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Trabajador"), "felicidad"),
+            "Energia Media Trabajadores": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Trabajador"), "energia"),
+            "Dinero Medio Trabajadores": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Trabajador"), "dinero"),
 
             # Específicos de Empresarios
-            "Felicidad Media Empresarios": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Empresario"), "felicidad"),
-            "Energia Media Empresarios": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Empresario"), "energia"),
-            "Dinero Medio Empresarios": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Empresario"), "dinero"),
+            "Felicidad Media Empresarios": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Empresario"), "felicidad"),
+            "Energia Media Empresarios": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Empresario"), "energia"),
+            "Dinero Medio Empresarios": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Empresario"), "dinero"),
 
             # Específicos de Antisistemas
-            "Felicidad Media Antisistema": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Antisistema"), "felicidad"),
-            "Energia Media Antisistema": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Antisistema"), "energia"),
-            "Dinero Medio Antisistema": lambda m: media_segura(m.agents.select(lambda a: a.tipo == "Antisistema"), "dinero")
+            "Felicidad Media Antisistema": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Antisistema"), "felicidad"),
+            "Energia Media Antisistema": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Antisistema"), "energia"),
+            "Dinero Medio Antisistema": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Antisistema"), "dinero")
         }
             
         #Datos recogidos de cada agente
@@ -293,10 +310,10 @@ class ModeloSociedad(mesa.Model):
 
 
         #Creamos los eventos que ocurrirán periódicamente durante la ejecución
-        #Paso de tiempo de 1 semana
         horasDia = 24.0
         horasSemana = horasDia * 7
 
+        #Paso de tiempo de 1 semana
         self.schedule_recurring(
             self.cambioSemana,
             Schedule(interval=horasSemana, start=1)
@@ -309,53 +326,219 @@ class ModeloSociedad(mesa.Model):
         )
 
 
-    def exportarDatos(self):
-        '''Método para guardar los datos recolectados durante la simulación en la carpeta de resultados'''
+    def colocarAgentes(self):
+        '''Asigna una celda vacía o aleatoria del grid a cada agente vivo.'''
+        for agente in self.agents:                
+            agente.cell = self.grid.all_cells.select_random_cell()
+
+
+
+    def reiniciarModelo(self, tablasQPorTipo=None, es_fin_entrenamiento=False):
+        '''
+        Método unificado para resetear el entorno de la simulación de forma limpia y mantenible.
+        '''
+        self.running = True
+        self.steps = 0
+        
+        if es_fin_entrenamiento:
+            self.modoEntrenamiento = False
+            print("Reset del entorno: Configurando sociedad para demostración visual...")
+        
+        # Limpieza elegante delegando en el agente
+        for agente in list(self.agents):
+            
+            # 1. El agente restaura sus propios recursos internos (energía, dinero, estado...)
+            agente.reiniciar()
+            
+            # 2. Si es el fin del entrenamiento, el modelo gestiona la inyección de la Tabla Q compartida
+            if es_fin_entrenamiento and tablasQPorTipo and agente.tipo in tablasQPorTipo:
+                agente.tablaQ = tablasQPorTipo[agente.tipo]
+
+        # Reposicionar a la población de forma aleatoria en el mapa
+        self.colocarAgentes()
+        
+        if es_fin_entrenamiento and self.datacollector:
+            self.datacollector.collect(self)
+            print("Sociedad lista. Todos los agentes de un mismo tipo comparten ahora la misma Tabla Q.")
+
+
+    def entrenamientoAgentes(self):
+        '''
+        Ejecuta un entrenamiento masivo rápido en segundo plano sin gráficos.
+        self.episodiosEntrenamiento representa el número de simulaciones (Episodios) completos.
+        '''
+        print(f"Iniciando entrenamiento adaptativo por {self.episodiosEntrenamiento} episodios independientes...")
+        
+        self.modoEntrenamiento = True
+        
+        #Desactivamos el data collector durante el entrenamiento para mejorar la velocidad
+        data_collector_aux = self.datacollector
+        self.datacollector = None 
+
+        for ciclo in range(self.episodiosEntrenamiento):
+            self.running = True
+            self.steps = 0
+            
+            print(f" > Ejecutando episodio {ciclo + 1}/{self.episodiosEntrenamiento}...")
+
+            while (self.running) and (self.steps < self.scenario.maxStepsCiclo):
+                self.step() 
+
+            if not self.running:
+                print(f"   [!] Episodio {ciclo + 1} finalizado prematuramente en el step {self.steps} por colapso social.")
+            else:
+                print(f"   [✓] Episodio {ciclo + 1} completado exitosamente ({self.scenario.maxStepsCiclo} steps).")
+
+            # Reset intermedio (Mantiene entrenamiento activo y conserva tablas Q individuales de cada agente)
+            if ciclo < self.episodiosEntrenamiento - 1:
+                self.reiniciarModelo(es_fin_entrenamiento=False)
+
+        # Consolidación final de conocimiento
+        print("\nEntrenamiento de calidad completado. Consolidando conocimiento final por tipo...")
+        tablasQPorTipo = self.consolidarTablasPorTipo()
+        print("Tablas Q resultantes =", tablasQPorTipo)
+
+        # Restauramos el recolector de datos antes del reinicio final
+        self.datacollector = data_collector_aux
+        
+        # Reset final (Fija el modo simulación e inyecta las tablas compartidas)
+        self.reiniciarModelo(tablasQPorTipo=tablasQPorTipo, es_fin_entrenamiento=True)
+
+
+
+    def consolidarTablasPorTipo(self):
+        '''
+        Agrupa las tablas Q de todos los agentes según su tipo y calcula la media 
+        de los valores Q para cada estado y acción detectados.
+        Devuelve un diccionario: { tipo_agente: { estado_tupla: [valores_q_medios] } }
+        '''
+        # Estructura temporal para acumular: { tipo: { estado: [ [val_agente1], [val_agente2] ] } }
+        acumulador = {"Trabajador": {}, "Empresario": {}, "Antisistema": {}}
+        tablas_medias = {}
+
+        # 1. Agrupar todos los vectores de valores Q por tipo y estado
+        for agente in self.agents:
+            # Incluimos también a los agentes "Muertos" si queremos aprovechar su aprendizaje previo
+            tipo = agente.tipo
+            if tipo not in acumulador:
+                continue
+                
+            for estado, valores in agente.tablaQ.items():
+                if estado not in acumulador[tipo]:
+                    acumulador[tipo][estado] = []
+                acumulador[tipo][estado].append(valores)
+
+        # 2. Calcular la media para cada estado-acción
+        for tipo, estados_dict in acumulador.items():
+            tablas_medias[tipo] = {}
+            for estado, lista_valores in estados_dict.items():
+                # Convertimos a matriz de numpy para promediar las columnas (acciones) limpiamente
+                matriz_valores = np.array(lista_valores)
+                medias_acciones = np.mean(matriz_valores, axis=0)
+                tablas_medias[tipo][estado] = medias_acciones.tolist()
+
+        return tablas_medias
+
+
+    def exportarDatosSimulacion(self):
+        '''Método para guardar los históricos recolectados por el DataCollector (Modelo y Agentes)'''
         if not os.path.exists("../resultados"):
             os.makedirs("../resultados")
         
-        # Generamos un nombre basado en la fecha y hora actuales
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        # Exportamos los datos del modelo
-        model_df = self.datacollector.get_model_vars_dataframe()
-        model_df.to_csv(f"../resultados/sim_{timestamp}_modelo.csv", index_label="Step")
-        
-        # Exportamos los datos de los agentes
-        agent_df = self.datacollector.get_agent_vars_dataframe()
-        agent_df.to_csv(f"../resultados/sim_{timestamp}_agentes.csv")
-        
-        print(f"Datos exportados correctamente como sim_{timestamp}")
+        if self.datacollector:
+            # Exportamos los datos macro del modelo
+            model_df = self.datacollector.get_model_vars_dataframe()
+            model_df.to_csv(f"../resultados/sim_{timestamp}_modelo.csv", index_label="Step")
+
+            # Exportamos el histórico de variables de los agentes
+            agent_df = self.datacollector.get_agent_vars_dataframe()
+            agent_df.to_csv(f"../resultados/sim_{timestamp}_agentes.csv")
+
+            print(f"Datos de la simulación exportados correctamente: simulacion_{timestamp}_*.csv")
+        else:
+            print("ERROR: No se han podido exportar los datos porque el DataCollector no está activo.")
+
+
+    def exportarPesosAgentes(self):
+        '''Método exclusivo para serializar y guardar las matrices Q de aprendizaje en formato JSON'''
+        if not os.path.exists("../resultados"):
+            os.makedirs("../resultados")
+            
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        pesos_por_tipo = {}
+        tipos_procesados = set()
+
+        for agente in self.agents:
+            if agente.tipo in tipos_procesados:
+                continue
+                
+            tabla_serializable = {}
+            for estado_tupla, valores in agente.tablaQ.items():
+                estado_str = ",".join(map(str, estado_tupla))
+                tabla_serializable[estado_str] = valores
+            
+            pesos_por_tipo[agente.tipo] = tabla_serializable
+            tipos_procesados.add(agente.tipo)
+            
+        archivo_path = f"../resultados/tablasQPorTipo{timestamp}.json"
+        with open(archivo_path, "w") as f:
+            json.dump(pesos_por_tipo, f, indent=4)
+            
+        print(f"Entrenamiento de los agentes correctamente guardados en: tablasQPorTipo_{timestamp}.json")
+
+
+    def importarDatos(self, nombreArchivo):
+        '''
+        Lee un archivo JSON con las tablas consolidadas por tipo e inyecta 
+        la misma tabla de forma compartida a todos los agentes de dicho rol.
+        '''
+        ruta = f"../resultados/{nombreArchivo}"
+        if not os.path.exists(ruta):
+            print(f"Error: El archivo {nombreArchivo} no existe en la carpeta de resultados.")
+            return False
+            
+        with open(ruta, "r") as f:
+            pesos_json = json.load(f)
+            
+        tablasQPorTipo = {}
+
+        # Reconstruimos el JSON: de claves String "0,1,2" pasamos a Tuplas (0, 1, 2)
+        for tipo, tabla_cruda in pesos_json.items():
+            tabla_reconstruida = {}
+            for estado_str, valores in tabla_cruda.items():
+                estado_tupla = tuple(map(int, estado_str.split(",")))
+                tabla_reconstruida[estado_tupla] = valores
+            tablasQPorTipo[tipo] = tabla_reconstruida
+
+        # Inyectamos la misma tabla compartida a todos los agentes vivos según su tipo
+        for agente in self.agents:
+            if agente.tipo in tablasQPorTipo:
+                # Comparten la misma estructura de datos en memoria
+                agente.tablaQ = tablasQPorTipo[agente.tipo]
+                
+        self.modo_entrenamiento = False  # Apagamos el modo entrenamiento al cargar conocimiento
+        print(f"Pesos compartidos cargados con éxito desde {nombreArchivo}. Escalabilidad activada.")
+        return True
 
 
     def comprobarAgentesMuertos(self):
-        '''Método que analiza todos los agentes y elimina aquellos que estén muertos. Si ya no quedan agentes vivos, acaba la simulación'''
+        '''Método que analiza todos los agentes y, en caso de que ya no queden agentes vivos, acaba la simulación'''
 
         agentesMuertos = []
 
-        #Comprobamos si ya se ha llegado al límite de agentes
-        if len(self.agents) == 1:
+        #Recorremos cada agente y, si está muerto, lo guardamos
+        for agente in self.agents:
+
+            if agente.estado == "Muerto":
+                agentesMuertos.append(agente)
+
+
+        #Al terminar, comprobamos si la cantidad de agentes muertos es la misma que la cantidad de agentes totales
+        if len(self.agents) == len(agentesMuertos):
             print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
             self.running = False
-        
-        else:
-
-            #Recorremos cada agente y, si está muerto, lo guardamos
-            for agente in self.agents:
-                if agente.estado == "Muerto":
-
-                    agentesMuertos.append(agente)
-
-
-            for agenteMuerto in agentesMuertos:
-
-                #Lo comprobamos en cada iteración para evitar que se eliminen todos los agentes restantes
-                if len(self.agents) == 1:
-                        print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
-                        self.running = False
-                        break
-                else:
-                    agenteMuerto.remove()
         
 
     
@@ -387,7 +570,8 @@ class ModeloSociedad(mesa.Model):
             self.agents.shuffle_do("step")
 
             #Recojemos los datos de todo el modelo una vez hayan actuado los agentes
-            self.datacollector.collect(self)
+            if self.datacollector is not None:
+                self.datacollector.collect(self)
 
             #Miramos si durante el paso anterior ha muerto algún agente, en cuyo caso lo eliminamos del modelo. Si no quedan agentes, acabamos la ejecución
             self.comprobarAgentesMuertos()
