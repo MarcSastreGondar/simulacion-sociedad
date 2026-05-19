@@ -1,0 +1,10 @@
+-Visualmente los botones están mal colocados
+
+-Al hacer una simulación (ejecutar sin estar entrenando), se actualizan los pesos del Q-Learning, cuando sólo se debería explotar (si no 
+hubiera política a seguir, deberíamos elegir una aleatoria).
+
+-Al ejecutar los entrenamientos, no se reinician correctamente los steps (al acabar el entrenamiento debería reiniciarse 
+completamente la ejecución, volviendo al step 0 con el único cambio siendo que los agentes ahora tienen datos en la tabla Q).
+
+-Aún no funciona el importar preentrenamiento de agentes. Probablemente cojeré, de los archivos que sean tablasQPorTipo, el que tenga la fecha más reciente, pero intentaré que
+se pueda seleccionar de alguna manera si puedo, ya que quedaría mejor. El problema es que la interacción y añadir elementos con Solaraviz no es demasiado fácil.
