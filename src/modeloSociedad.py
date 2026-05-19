@@ -76,6 +76,8 @@ class EscenarioSociedad(Scenario):
     epsilonQ: float = 1.0
     epsilonMinimo: float = 0.01     #Siempre al menos un 1% de probabilidades de realizar una acción aleatoria
 
+    porcentajeDineroRecompensa: float = 0.05    #Qué porcentaje del dinero perdido se resta a la recompensa obtenida
+
 
     porcentajePocaEnergiaQ: float = 0.33        #Poca energía si energiaAgente < energiaMax * porcentajePocaEnergiaQ
     porcentajeMediaEnergiaQ: float = 0.66       #Media energía si energiaAgente < energiaMax * porcentajeMediaEnergiaQ
@@ -119,6 +121,7 @@ class EscenarioSociedad(Scenario):
     horasMaximasDormir: float = 8.0
     felicidadDormirMal: float = -2
     felicidadDormirBien: float = 3
+    maxDormirPorDia: int = 1
     
     #Entrenar
     energiaEntrenar: int = -10

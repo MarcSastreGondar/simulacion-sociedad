@@ -34,7 +34,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         #Atributos para el aprendizaje por refuerzo
         # Estructura de la Tabla Q dinámica por agente
-        # Formato: {(rango_energia, rango_dinero, rango_tiempo): [Q_act0, Q_act1, ..., Q_actN]}
+        # Formato: {(rangoEnergia, rangoDinero, rangoTiempo): [Q_act0, Q_act1, ..., Q_actN]}
         self.tablaQ = {}
         self.epsilon = self.scenario.epsilonQ
 
@@ -83,48 +83,53 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.gastosCuotidianos = 0
         self.tiempoMensualidadGym = 0       #Empieza sin estar suscrito al gimnasio
         self.contadorComidaBasura = 0       #Empieza no pudiendo comer
+        self.contadorDormir = 0
 
         # Variables para la ecuación de Bellman
         self.estadoAnterior = None
         self.accionAnterior = None
         self.felicidadAnterior = self.felicidad
+        self.dineroAnterior = self.dinero
 
 
     # Métodos comunes de los agentes
     #Métodos relacionados con el Q-Learning
+    #####Prime
     def obtenerEstado(self):
         '''
         Traduce los recursos continuos del agente (Energía, Dinero, Tiempo) en valores discretos (0: Bajo, 1: Medio, 2: Alto) para la Tabla Q.
-        Devuelve una tupla (rango_energia, rango_dinero, rango_tiempo)
+        Devuelve una tupla (rangoEnergia, rangoDinero, rangoTiempo)
         '''
+
+        # Discretizamos el Dinero
+        if self.dinero < (self.scenario.sueldoMedio / self.scenario.divisionPocoDinero):      #Dependerá del sueldo medio de los trabajadores que hay al inicio de la simulación
+            rangoDinero = 0   # Bajo
+        elif self.dinero < (self.scenario.sueldoMedio * self.scenario.multiplicacionMedioDinero):
+            rangoDinero = 1   # Medio
+        else:
+            rangoDinero = 2   # Alto
+
 
         #Discretizamos la Energía
         #Los valores frontera no dependen del tipo de agente
         if self.energia < (self.scenario.energiaMax * self.scenario.porcentajePocaEnergiaQ):        #Depende de la energía con la que empiezan los agentes
-            rango_energia = 0  # Bajo
+            rangoEnergia = 0  # Bajo
         elif self.energia < (self.scenario.energiaMax * self.scenario.porcentajeMediaEnergiaQ):
-            rango_energia = 1  # Medio
+            rangoEnergia = 1  # Medio
         else:
-            rango_energia = 2  # Alto
+            rangoEnergia = 2  # Alto
 
-        # Discretizamos el Dinero
-        if self.dinero < (self.scenario.sueldoMedio / self.scenario.divisionPocoDinero):      #Dependerá del sueldo medio de los trabajadores que hay al inicio de la simulación
-            rango_dinero = 0   # Bajo
-        elif self.dinero < (self.scenario.sueldoMedio * self.scenario.multiplicacionMedioDinero):
-            rango_dinero = 1   # Medio
-        else:
-            rango_dinero = 2   # Alto
 
         #Discretizamos el tiempo disponible
-        tercio_tiempo = (self.scenario.tiempoMaxPosible - self.scenario.tiempoVital) / 3.0
-        if self.tiempoDisponible < tercio_tiempo:
-            rango_tiempo = 0   # Poco tiempo
-        elif self.tiempoDisponible < (tercio_tiempo * 2):
-            rango_tiempo = 1   # Tiempo medio
+        tercioTiempo = (self.scenario.tiempoMaxPosible - self.scenario.tiempoVital) / 3.0
+        if self.tiempoDisponible < tercioTiempo:
+            rangoTiempo = 0   # Poco tiempo
+        elif self.tiempoDisponible < (tercioTiempo * 2):
+            rangoTiempo = 1   # Tiempo medio
         else:
-            rango_tiempo = 2   # Mucho tiempo disponible
-
-        estadoActual = (rango_energia, rango_dinero, rango_tiempo)
+            rangoTiempo = 2   # Mucho tiempo disponible
+        
+        estadoActual = (rangoDinero, rangoEnergia, rangoTiempo)
 
         # Si el estado no ha sido visitado nunca, inicializamos sus valores Q en cero
         if estadoActual not in self.tablaQ:
@@ -137,7 +142,24 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         '''
         Calcula la recompensa inmediata del agente basada en la variación de la felicidad. R = felicidad_actual - felicidadAnterior
         '''
-        return self.felicidad - self.felicidadAnterior
+        # La felicidad es el objetivo final, así que añadimos directamente la diferencia de felicidad
+        cambioFelicidad = self.felicidad - self.felicidadAnterior
+
+        # Aplicamos también una penalización en función del dinero que gasta (para evitar que malgaste el dinero). Ganar dinero no recompensará al agente.
+        cambioDinero = self.dinero - self.dineroAnterior
+        penalizacionDinero = cambioDinero * self.scenario.porcentajeDineroRecompensa
+
+        #Si es un valor positivo, no lo tenemos en cuenta (sólo queremos que reste en caso de que gaste dinero)
+        if penalizacionDinero > 0:
+            penalizacionDinero = 0
+
+
+        # Recompensa Final = Felicidad Ganada - Gasto Dinero
+        recompensa = cambioFelicidad - penalizacionDinero
+
+        print(f"ΔFelicidad: {cambioFelicidad:.2f} | Penalización Dinero: -{penalizacionDinero:.2f} | Recompensa Final: {recompensa:.2f}")
+
+        return recompensa
 
 
     # Métodos auxiliares
@@ -326,37 +348,39 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         
     def dormir(self):
         '''Dormir para recuperar energia'''
-        horas = self.scenario.horasMaximasDormir        #Intenta dormir la máxima cantidad de horas posibles
 
-        #Nos aseguramos de que duerma una cantidad de tiempo fácilmente controlable
-        redondearDecimalMedio(horas)
+        if self.contadorDormir > 0:
+            horas = self.scenario.horasMaximasDormir        #Intenta dormir la máxima cantidad de horas posibles
 
-        #En caso de que no tenga tiempo suficiente para dormir tanto como quiere, reducimos la cantidad de horas que podrá dormir hasta que, o bien pueda dormir, o bien no llegue al mínimo
-        while((not self.comprobarTiempoEnergiaFelicidadDinero(tiempo=horas)) and (horas > self.scenario.horasMinimasDormir)):
-            horas -= 0.5      #Restamos media hora
+            #Nos aseguramos de que duerma una cantidad de tiempo fácilmente controlable
+            redondearDecimalMedio(horas)
+
+            #En caso de que no tenga tiempo suficiente para dormir tanto como quiere, reducimos la cantidad de horas que podrá dormir hasta que, o bien pueda dormir, o bien no llegue al mínimo
+            while((not self.comprobarTiempoEnergiaFelicidadDinero(tiempo=horas)) and (horas > self.scenario.horasMinimasDormir)):
+                horas -= 0.5      #Restamos media hora
 
 
-        #Comprobamos si tiene la cantidad suficiente de horas disponibles para dormir
-        if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=horas):
-            #Duerme la cantidad de horas decidida y recupera energía en función de la cantidad de horas que duerme
-            porcentajeRecuperado = 1/self.scenario.horasMaximasDormir * horas
-            energiaRecuperada = self.energiaMax * porcentajeRecuperado
+            #Comprobamos si tiene la cantidad suficiente de horas disponibles para dormir
+            if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=horas):
+                #Duerme la cantidad de horas decidida y recupera energía en función de la cantidad de horas que duerme
+                porcentajeRecuperado = 1/self.scenario.horasMaximasDormir * horas
+                energiaRecuperada = self.energiaMax * porcentajeRecuperado
 
-            #Si duerme especialmente bien o especialmente mal modifica su felicidad
-            cambioFelicidad = None    
-            if horas >= 0.8*self.scenario.horasMaximasDormir:               #Si duerme un 80% o más del máximo, aumenta su felicidad
-                cambioFelicidad = self.scenario.felicidadDormirBien
-            if horas <= 0.6*self.scenario.horasMaximasDormir:               #Si duerme un 60% o menos del máximo, disminuye su felicidad
-                cambioFelicidad = self.scenario.felicidadDormirMal
+                #Si duerme especialmente bien o especialmente mal modifica su felicidad
+                cambioFelicidad = None    
+                if horas >= 0.8*self.scenario.horasMaximasDormir:               #Si duerme un 80% o más del máximo, aumenta su felicidad
+                    cambioFelicidad = self.scenario.felicidadDormirBien
+                if horas <= 0.6*self.scenario.horasMaximasDormir:               #Si duerme un 60% o menos del máximo, disminuye su felicidad
+                    cambioFelicidad = self.scenario.felicidadDormirMal
 
-            self.modificarEnergiaFelicidadDinero(energia=energiaRecuperada, felicidad=cambioFelicidad)
-            
-            #Lo ocupamos durmiendo
-            self.ocupar(horas)
+                self.modificarEnergiaFelicidadDinero(energia=energiaRecuperada, felicidad=cambioFelicidad)
 
-            return True
+                #Lo ocupamos durmiendo
+                self.ocupar(horas)
+
+                return True
         
-        #Si no tiene la suficiente cantidad de tiempo para dormir, no duerme
+        #Si no tiene la suficiente cantidad de tiempo para dormir, o no ha podido dormir, devolvemos False
         return False    
 
     def entrenarGimnasio(self):
@@ -460,7 +484,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
 
     def printCaracteristicas(self):
-        print(f"ID = {self.unique_id}. Tipo del agente = {self.tipo}. Dinero = {self.dinero}. Felicidad = {self.felicidad}. Energia = {self.energia}. Tiempo disponible = {self.tiempoDisponible}. Tiempo máximo posible = {self.tiempoMaxPosible}. Energía máxima posible = {self.energiaMax}.")
+        print(f"ID = {self.unique_id}. Tipo del agente = {self.tipo}. Estado = {self.estado}. Dinero = {self.dinero}. Felicidad = {self.felicidad}. Energia = {self.energia}. Tiempo disponible = {self.tiempoDisponible}. Tiempo máximo posible = {self.tiempoMaxPosible}. Energía máxima posible = {self.energiaMax}.")
 
 
     def avanceDiarioGeneral(self):
@@ -471,6 +495,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.tiempoDisponible = self.tiempoMaxPosible                       #Reestablecemos la cantidad de tiempo disponible para el agente a su máximo
 
         self.contadorComidaBasura = self.scenario.maxComidasPorDia          #Reestablecemos la cantidad de comida basura que puede comer en 1 día
+        self.contadorDormir = self.scenario.maxDormirPorDia
 
         #Avanzamos en 1 día la cuota del gimnasio
         if self.tiempoMensualidadGym > 0:
@@ -489,6 +514,9 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         '''
         # Obtenemos el estado actual (s')
         estadoActual = self.obtenerEstado()
+        print("Inicio")
+        print("Q(s,a) anterior =", self.estadoAnterior, self.accionAnterior)
+        print("Estado actual =", estadoActual)
 
         # Si ya hemos hecho una acción anteriormente, actualizamos la tabla Q
         if self.estadoAnterior is not None and self.accionAnterior is not None:
@@ -498,8 +526,12 @@ class AgenteBase(mesa.discrete_space.CellAgent):
             qModificar = self.tablaQ[self.estadoAnterior][self.accionAnterior]
             maxQFuturo = max(self.tablaQ[estadoActual])
 
+            print("Q(s,a) a modificar =", qModificar,  "maxQFuturo desde el estado actual =", maxQFuturo)
+            print("----self.tablaQ[self.estadoAnterior][self.accionAnterior] antes =", self.tablaQ[self.estadoAnterior][self.accionAnterior])
             self.tablaQ[self.estadoAnterior][self.accionAnterior] = qModificar + self.scenario.alfaQ * (recompensa + self.scenario.gammaQ * maxQFuturo - qModificar)
+            print("----self.tablaQ[self.estadoAnterior][self.accionAnterior] antes =", self.tablaQ[self.estadoAnterior][self.accionAnterior])
 
+        print("Fin!")
         # Actualizamos la felicidad anterior para el próximo cálculo
         self.felicidadAnterior = self.felicidad
 
