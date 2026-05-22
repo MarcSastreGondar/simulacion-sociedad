@@ -541,7 +541,7 @@ class ModeloSociedad(mesa.Model):
                 tabla_reconstruida[estado_tupla] = valores
             tablas_reconstruidas[tipo] = tabla_reconstruida
 
-        # CONSISTENCIA: Guardamos los datos cargados en la variable centralizada del modelo
+        # Guardamos los datos cargados en la variable centralizada del modelo
         self.tablasQPorTipo = tablas_reconstruidas
 
         # Inyectamos las tablas correspondientes a todos los agentes vivos según su tipo
