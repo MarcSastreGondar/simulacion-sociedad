@@ -15,7 +15,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         super().__init__(modelo)
 
         # Definimos las acciones posibles que podrá realizar el agente
-        accionesGenerales = ["move", "dormir", "entrenarGimnasio", "compraLujosa", "ocio", "comidaBasura"]
+        accionesGenerales = ["dormir", "entrenarGimnasio", "compraLujosa", "ocio", "comidaBasura"]
 
         if accionesEspecificas is None:
             accionesEspecificas = []
@@ -40,7 +40,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
 
 
-    def reiniciarGeneral(self):
+    def reiniciarGeneral(self, epsilon=None):
         ''' Método que instancia las variables del agente con el valor por defecto. Es muy importante que se llame a este método desde 
             el reiniciar() implementado por los agentes y que, a su vez, el reiniciar() se llame desde el __init__ de los agentes específicos'''
         
@@ -85,7 +85,13 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         self.contadorComidaBasura = 0       #Empieza no pudiendo comer
         self.contadorDormir = 0
 
-        # Variables para la ecuación de Bellman
+        # Variables para el Q-Learning y la ecuación de Bellman
+        #Actualizamos el epsilon en cada reinicio por si ha habido decay o cambio de entrenamiento a simulación
+        if epsilon is None:
+            self.epsilon = self.scenario.epsilonSimulacion
+        else:
+            self.epsilon = epsilon
+
         self.estadoAnterior = None
         self.accionAnterior = None
         self.felicidadAnterior = self.felicidad
@@ -103,31 +109,31 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         # Discretizamos el Dinero
         if self.dinero < (self.scenario.sueldoMedio / self.scenario.divisionPocoDinero):      #Dependerá del sueldo medio de los trabajadores que hay al inicio de la simulación
-            rangoDinero = 0   # Bajo
+            rangoDinero = 1   # Bajo
         elif self.dinero < (self.scenario.sueldoMedio * self.scenario.multiplicacionMedioDinero):
-            rangoDinero = 1   # Medio
+            rangoDinero = 2   # Medio
         else:
-            rangoDinero = 2   # Alto
+            rangoDinero = 3   # Alto
 
 
         #Discretizamos la Energía
         #Los valores frontera no dependen del tipo de agente
         if self.energia < (self.scenario.energiaMax * self.scenario.porcentajePocaEnergiaQ):        #Depende de la energía con la que empiezan los agentes
-            rangoEnergia = 0  # Bajo
+            rangoEnergia = 1  # Bajo
         elif self.energia < (self.scenario.energiaMax * self.scenario.porcentajeMediaEnergiaQ):
-            rangoEnergia = 1  # Medio
+            rangoEnergia = 2  # Medio
         else:
-            rangoEnergia = 2  # Alto
+            rangoEnergia = 3  # Alto
 
 
         #Discretizamos el tiempo disponible
         tercioTiempo = (self.scenario.tiempoMaxPosible - self.scenario.tiempoVital) / 3.0
         if self.tiempoDisponible < tercioTiempo:
-            rangoTiempo = 0   # Poco tiempo
+            rangoTiempo = 1   # Poco tiempo
         elif self.tiempoDisponible < (tercioTiempo * 2):
-            rangoTiempo = 1   # Tiempo medio
+            rangoTiempo = 2   # Tiempo medio
         else:
-            rangoTiempo = 2   # Mucho tiempo disponible
+            rangoTiempo = 3   # Mucho tiempo disponible
         
         estadoActual = (rangoDinero, rangoEnergia, rangoTiempo)
 
@@ -137,7 +143,7 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         return estadoActual
     
-
+    #####Prime
     def calcularRecompensa(self):
         '''
         Calcula la recompensa inmediata del agente basada en la variación de la felicidad. R = felicidad_actual - felicidadAnterior
@@ -147,19 +153,26 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         # Aplicamos también una penalización en función del dinero que gasta (para evitar que malgaste el dinero). Ganar dinero no recompensará al agente.
         cambioDinero = self.dinero - self.dineroAnterior
-        penalizacionDinero = cambioDinero * self.scenario.porcentajeDineroRecompensa
+        penalizacionDinero = 0
 
-        #Si es un valor positivo, no lo tenemos en cuenta (sólo queremos que reste en caso de que gaste dinero)
-        if penalizacionDinero > 0:
-            penalizacionDinero = 0
+        #Sólo incluimos una penalización si es un gasto, si gana dinero no lo tenemos en cuenta. Para evitar que malgaste el dinero
+        if cambioDinero < 0:
+            penalizacionDinero = cambioDinero * self.scenario.porcentajeDineroRecompensa
+
+            estadoActual = self.obtenerEstado()
+            estadoDinero = estadoActual[0]
+
+            #Se penaliza más cuanto menor dinero tiene el agente (es peor gastar el dinero cuando tienes poco dinero)
+            penalizacionDinero = penalizacionDinero * 1/estadoDinero
 
 
-        # Recompensa Final = Felicidad Ganada - Gasto Dinero
-        recompensa = cambioFelicidad - penalizacionDinero
+        # Recompensa Final = Felicidad Ganada + Gasto Dinero (el gasto ya es un valor negativo)
+        recompensa = cambioFelicidad + penalizacionDinero
 
-        print(f"ΔFelicidad: {cambioFelicidad:.2f} | Penalización Dinero: -{penalizacionDinero:.2f} | Recompensa Final: {recompensa:.2f}")
+        #####print(f"Cambio Felicidad: {cambioFelicidad} (= {self.felicidad} - {self.felicidadAnterior}) | Cambio Dinero: {penalizacionDinero} (= {cambioDinero} * {self.scenario.porcentajeDineroRecompensa}) | Recompensa Final: {recompensa:.2f}")
 
         return recompensa
+    
 
 
     # Métodos auxiliares
@@ -348,7 +361,6 @@ class AgenteBase(mesa.discrete_space.CellAgent):
         
     def dormir(self):
         '''Dormir para recuperar energia'''
-
         if self.contadorDormir > 0:
             horas = self.scenario.horasMaximasDormir        #Intenta dormir la máxima cantidad de horas posibles
 
@@ -507,47 +519,60 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         self.modificarEnergiaFelicidadDinero(felicidad=reduccionFelicidad, dinero=self.gastosCuotidianos)
 
-
+    #####Prime
     def elegirAccion(self):
         '''
         Aplica la política epsilon-greedy usando el espacio dinámico de acciones. Ejecuta el método mapeado y gestiona el feedback del Q-Learning.
         '''
         # Obtenemos el estado actual (s')
         estadoActual = self.obtenerEstado()
-        print("Inicio")
-        print("Q(s,a) anterior =", self.estadoAnterior, self.accionAnterior)
-        print("Estado actual =", estadoActual)
-
-        # Si ya hemos hecho una acción anteriormente, actualizamos la tabla Q
-        if self.estadoAnterior is not None and self.accionAnterior is not None:
-            recompensa = self.calcularRecompensa()
-
-            # Q(s,a) = Q(s,a) + alpha * (R + gamma * max(Q(s', a')) - Q(s,a))
-            qModificar = self.tablaQ[self.estadoAnterior][self.accionAnterior]
-            maxQFuturo = max(self.tablaQ[estadoActual])
-
-            print("Q(s,a) a modificar =", qModificar,  "maxQFuturo desde el estado actual =", maxQFuturo)
-            print("----self.tablaQ[self.estadoAnterior][self.accionAnterior] antes =", self.tablaQ[self.estadoAnterior][self.accionAnterior])
-            self.tablaQ[self.estadoAnterior][self.accionAnterior] = qModificar + self.scenario.alfaQ * (recompensa + self.scenario.gammaQ * maxQFuturo - qModificar)
-            print("----self.tablaQ[self.estadoAnterior][self.accionAnterior] antes =", self.tablaQ[self.estadoAnterior][self.accionAnterior])
-
-        print("Fin!")
-        # Actualizamos la felicidad anterior para el próximo cálculo
-        self.felicidadAnterior = self.felicidad
 
 
-        #Seleccionamos una acción usando Epsilon-Greedy con decaimiento
+        #Si nos encontramos en modo entrenamiento, actualizamos las tablasQ
         if self.model.modoEntrenamiento:
-            epsilon = self.epsilon  # Usa el epsilon con decay que disminuye en el tiempo
-        else:
-            epsilon = self.scenario.epsilonMinimo  # Valor mínimo o 0 en fase de explotación/simulación
+            # Si ya hemos hecho una acción anteriormente, actualizamos la tabla Q
+            if self.estadoAnterior is not None and self.accionAnterior is not None:
+                recompensa = self.calcularRecompensa()
 
-        if self.aleat.random() < epsilon:       #####Revisar si el random está bien
+                # Q(s,a) = Q(s,a) + alpha * (R + gamma * max(Q(s', a')) - Q(s,a))
+                qModificar = self.tablaQ[self.estadoAnterior][self.accionAnterior]
+                maxQFuturo = max(self.tablaQ[estadoActual])
+
+                self.tablaQ[self.estadoAnterior][self.accionAnterior] = qModificar + self.scenario.alfaQ * (recompensa + self.scenario.gammaQ * maxQFuturo - qModificar)
+
+            # Actualizamos la felicidad y dinero anteriores para el próximo cálculo
+            self.felicidadAnterior = self.felicidad
+            self.dineroAnterior = self.dinero
+
+        
+        #Si toca explorar, elegimos un índice aleatorio
+        if self.aleat.random() < self.epsilon:
             # Exploramos con un índice aleatorio
             idxAccion = self.aleat.integers(0, len(self.listaAcciones))
+
         else:
-            # Explotamos usando el índice de la acción que tiene un valor máximo en la tabla Q desde este estado
-            idxAccion = int(np.argmax(self.tablaQ[estadoActual]))
+            # Si toca explotar, miramos el mayor Q de cada acción que tenemos
+            valMax = -9999999999999999
+            idxAccion = 0
+            idxAux = 0
+            cantIguales = 0
+
+            #Recorremos cada acción y guardamos su valor máximo
+            for valAccion in self.tablaQ[estadoActual]:
+
+                #Si el valor que encontramos es mayor al máximo, pasa a ser el nuevo máximo y guardamos su índice
+                if valAccion > valMax:
+                    valMax = valAccion
+                    idxAccion = idxAux
+                
+                if valAccion == valMax:
+                    cantIguales += 1
+
+                idxAux += 1
+            
+            #Si todos los valores han tenido la misma Q, elegimos una acción aleatoriamente de entre ellas
+            if cantIguales == len(self.tablaQ[estadoActual]):
+                idxAccion = self.aleat.integers(0, len(self.listaAcciones))
 
 
         #Ejecutamos la acción
@@ -555,10 +580,12 @@ class AgenteBase(mesa.discrete_space.CellAgent):
 
         accion = getattr(self, nombreAccion)
 
-        realizada = accion() 
+        realizada = accion()
 
-        # Si la acción no se ha podido realizar por falta de recursos, lo penalizamos un poco
-        if not realizada:
+
+        # Si durante el entrenamiento la acción no se ha podido realizar por falta de recursos, la penalizamos un poco
+        if not realizada and self.model.modoEntrenamiento:
+
             self.tablaQ[estadoActual][idxAccion] -= 2.0 
 
         #Este estado y acción pasan a ser los últimos, para el próximo step

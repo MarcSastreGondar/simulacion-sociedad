@@ -25,9 +25,9 @@ class Trabajador(AgenteBase):
         self.reiniciar()    #Instanciamos el valor de sus variables
 
 
-    def reiniciar(self):
+    def reiniciar(self, epsilon=None):
         '''Método que instancia las variables del Trabajador con el valor por defecto'''
-        self.reiniciarGeneral()
+        self.reiniciarGeneral(epsilon=epsilon)
 
         #Obtenemos la cantidad de tiempo que pasa trabajando presencialmente el agente
         self.tiempoAlTrabajo = self.aleat.uniform(0.25, self.scenario.maxTiempoAlTrabajo)     #Añadimos aleatoriedad en la cantidad de tiempo que necesita un agente para ir y volver del trabajo (entre 20 minutos y el tiempo introducido)

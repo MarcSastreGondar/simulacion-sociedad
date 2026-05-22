@@ -23,9 +23,9 @@ class Antisistema(AgenteBase):
         self.reiniciar()            #Instanciamos los valores que pueden llegar a ser reiniciados
 
 
-    def reiniciar(self):
+    def reiniciar(self, epsilon=None):
         '''Método que instancia las variables del Antisistema con el valor por defecto'''
-        self.reiniciarGeneral()
+        self.reiniciarGeneral(epsilon=epsilon)
 
         self.odioSocial = 0         #Cantidad de odio que sienten los demás miembros de la sociedad hacia él. Si tiene demasiado, se le expulsa de la sociedad
 

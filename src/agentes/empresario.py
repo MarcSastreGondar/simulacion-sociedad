@@ -22,9 +22,9 @@ class Empresario(AgenteBase):
         self.reiniciar()            #Instanciamos los valores que pueden llegar a ser reiniciados
 
 
-    def reiniciar(self):
+    def reiniciar(self, epsilon=None):
         '''Método que instancia las variables del Empresario con el valor por defecto'''
-        self.reiniciarGeneral()
+        self.reiniciarGeneral(epsilon=epsilon)
 
 
     #Métodos auxiliares

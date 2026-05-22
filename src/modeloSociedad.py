@@ -54,9 +54,9 @@ class EscenarioSociedad(Scenario):
     felicidadMax: float = 100.0
 
     #Cantidad de cada tipo de agente
-    n_trabajadores: int = 5               #Cantidad de trabajadores
-    n_empresarios: int = 5                 #Cantidad de empresarios
-    n_antisistemas: int = 5                 #Cantidad de agentes antisistema
+    cantTrabajadores: int = 5               #Cantidad de trabajadores
+    cantEmpresarios: int = 5                 #Cantidad de empresarios
+    cantAntisistemas: int = 5                 #Cantidad de agentes antisistema
 
     porcentajeAleatorio: float = 0.25
 
@@ -69,12 +69,14 @@ class EscenarioSociedad(Scenario):
 
     #Relacionados con el Entrenamiento de los agentes y el Q-Learning
     episodiosEntrenamiento: int = 30       #Cantidad de simulaciones enteras que deben realizarse para entrenar a los agentes
-    maxStepsCiclo: int = 50       #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
+    maxStepsEpisodio: int = 25       #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
     
     alfaQ: float = 0.1
     gammaQ: float = 0.9
     epsilonQ: float = 1.0
-    epsilonMinimo: float = 0.01     #Siempre al menos un 1% de probabilidades de realizar una acción aleatoria
+    reduccionEpsilonEpisodio: float = 0.05  #Cantidad que se reduce el Epsilon en cada ciclo completo de entrenamiento
+    epsilonMinimo: float = 0.01             #Siempre un 1% de probabilidades de realizar una acción aleatoria
+    epsilonSimulacion: float = 0.005          #Probabilidad de explorar en una simulación real
 
     porcentajeDineroRecompensa: float = 0.05    #Qué porcentaje del dinero perdido se resta a la recompensa obtenida
 
@@ -234,14 +236,14 @@ class EscenarioSociedad(Scenario):
 '''Modelo principal de la simulación'''
 class ModeloSociedad(mesa.Model):    
     
-    def __init__(self, n_trabajadores=10, n_empresarios=5, n_antisistemas=5, episodiosEntrenamiento=10):
+    def __init__(self, cantTrabajadores=10, cantEmpresarios=5, cantAntisistemas=5, episodiosEntrenamiento=10):
         
         #Instanciamos el escenario con los parámetros que se utilizarán para configurar la simulación
         escenario = EscenarioSociedad()        
 
         #En caso de ser necesario, actualizamos los parámetros del escenario antes de crear el modelo
         # Si los agentes no caben bien dentro de las casillas, aumentamos la cantidad de casillas
-        totalAgentes = n_trabajadores + n_empresarios + n_antisistemas
+        totalAgentes = cantTrabajadores + cantEmpresarios + cantAntisistemas
         auxTotalAgentes = 2.5 * totalAgentes                                                             #Para que quepan mejor y puedan moverse
 
 
@@ -255,25 +257,25 @@ class ModeloSociedad(mesa.Model):
         self.modoEntrenamiento = False  # Si es True, entrenamiento (actualiza la matriz Q). Si es False, es una simulación con lo que ya se sabe
         self.episodiosEntrenamiento = episodiosEntrenamiento
 
-        self.n_trabajadores = n_trabajadores
-        self.n_empresarios = n_empresarios
-        self.n_antisistemas = n_antisistemas
+        self.cantTrabajadores = cantTrabajadores
+        self.cantEmpresarios = cantEmpresarios
+        self.cantAntisistemas = cantAntisistemas
 
         # Creamos las casillas en las que pueden moverse los agentes
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((self.scenario.anchuraGrid, self.scenario.alturaGrid), torus=True, random=self.random)  #torus = True para que los bordes del mapa están conectados entre sí
         
         # Creamos los agentes de cada tipo
-        self.trabajadores = Trabajador.create_agents(self, n_trabajadores)
+        self.trabajadores = Trabajador.create_agents(self, cantTrabajadores)
         
-        self.empresarios = Empresario.create_agents(self, n_empresarios)
+        self.empresarios = Empresario.create_agents(self, cantEmpresarios)
         
-        self.antisistemas = Antisistema.create_agents(self, n_antisistemas)        
+        self.antisistemas = Antisistema.create_agents(self, cantAntisistemas)        
 
         self.colocarAgentes()
 
         print(f"Agentes correctamente instanciados. Se han creado {len(self.agents)} agentes, siendo {len(self.trabajadores)} trabajadores, {len(self.empresarios)} empresarios y {len(self.antisistemas)} antisistema.")   
-        
-        
+
+
         #Inicializamos el data collector para que recoja los datos durante la ejecución
         #Datos recogidos del modelo
         model_reporters={
@@ -328,202 +330,229 @@ class ModeloSociedad(mesa.Model):
             Schedule(interval=horasDia, start=1)
         )
 
+        self.epsilon = self.scenario.epsilonSimulacion       #Inicializamos el valor del epsilon inicial
+
 
     def colocarAgentes(self):
         '''Asigna una celda vacía o aleatoria del grid a cada agente vivo.'''
         for agente in self.agents:                
             agente.cell = self.grid.all_cells.select_random_cell()
 
+    #####Prime
+    def decaimientoEpsilon(self):
+        '''Método que sirve para reducir el epsilon después de acabar cada episodio de entrenamiento'''
+        self.epsilon -= self.scenario.reduccionEpsilonEpisodio
+
+        if self.epsilon < self.scenario.epsilonMinimo:
+            self.epsilon = self.scenario.epsilonMinimo
 
 
-    def reiniciarModelo(self, tablasQPorTipo=None, es_fin_entrenamiento=False):
+    #####Prime
+    def reiniciarModeloEntrenamiento(self, finalEntrenamiento=False):
         '''
-        Método unificado para resetear el entorno de la simulación de forma limpia y mantenible.
+        Método para reiniciar durante el entrenamiento. En caso de ser el final del entrenamiento, vuelve a activar el datacollector y fusiona las tablas Q en una sola (por tipo)
         '''
         self.running = True
         self.steps = 0
-        
-        if es_fin_entrenamiento:
+
+        if finalEntrenamiento:
             self.modoEntrenamiento = False
-            print("Reset del entorno: Configurando sociedad para demostración visual...")
-        
-        # Limpieza elegante delegando en el agente
+
+            # Agrupación final del conocimiento por tipo
+            self.tablasQPorTipo = self.consolidarTablasPorTipo()
+
+        # Reinicio de valores del agente
         for agente in list(self.agents):
             
-            # 1. El agente restaura sus propios recursos internos (energía, dinero, estado...)
-            agente.reiniciar()
+            # El agente restaura sus recursos al estado por defecto
+            agente.reiniciar(self.epsilon)      #Le asignamos el nuevo epsilon (por el decay)
             
-            # 2. Si es el fin del entrenamiento, el modelo gestiona la inyección de la Tabla Q compartida
-            if es_fin_entrenamiento and tablasQPorTipo and agente.tipo in tablasQPorTipo:
-                agente.tablaQ = tablasQPorTipo[agente.tipo]
+            # Si es el fin del entrenamiento, le asginamos la tabla Q compartida
+            if finalEntrenamiento and agente.tipo in self.tablasQPorTipo:
+                agente.tablaQ = self.tablasQPorTipo[agente.tipo]
 
         # Reposicionar a la población de forma aleatoria en el mapa
         self.colocarAgentes()
         
-        if es_fin_entrenamiento and self.datacollector:
+        if (finalEntrenamiento) and (self.datacollector is not None):
             self.datacollector.collect(self)
-            print("Sociedad lista. Todos los agentes de un mismo tipo comparten ahora la misma Tabla Q.")
 
 
+    #####Prime
     def entrenamientoAgentes(self):
-        '''
-        Ejecuta un entrenamiento masivo rápido en segundo plano sin gráficos.
-        self.episodiosEntrenamiento representa el número de simulaciones (Episodios) completos.
-        '''
-        print(f"Iniciando entrenamiento adaptativo por {self.episodiosEntrenamiento} episodios independientes...")
+        '''Ejecuta un entrenamiento completo sin gráficos'''
         
         self.modoEntrenamiento = True
+
+        self.epsilon = self.scenario.epsilonQ       #Reiniciamos el valor del epsilon
         
         #Desactivamos el data collector durante el entrenamiento para mejorar la velocidad
-        data_collector_aux = self.datacollector
+        datacollectorAux = self.datacollector
         self.datacollector = None 
 
-        for ciclo in range(self.episodiosEntrenamiento):
+
+        for episodio in range(self.episodiosEntrenamiento):
             self.running = True
             self.steps = 0
-            
-            print(f" > Ejecutando episodio {ciclo + 1}/{self.episodiosEntrenamiento}...")
 
-            while (self.running) and (self.steps < self.scenario.maxStepsCiclo):
-                self.step() 
+            if ((episodio + 1) % 5) == 0:
+                print(f"    Ejecutando episodio {episodio + 1}/{self.episodiosEntrenamiento}...")
+
+            while (self.running) and (self.steps < self.scenario.maxStepsEpisodio):
+                self.step()
 
             if not self.running:
-                print(f"   [!] Episodio {ciclo + 1} finalizado prematuramente en el step {self.steps} por colapso social.")
-            else:
-                print(f"   [✓] Episodio {ciclo + 1} completado exitosamente ({self.scenario.maxStepsCiclo} steps).")
+                print(f"        Episodio {episodio + 1} FINALIZADO PREMATURAMENTE en el step {self.steps} por colapso social.")
 
-            # Reset intermedio (Mantiene entrenamiento activo y conserva tablas Q individuales de cada agente)
-            if ciclo < self.episodiosEntrenamiento - 1:
-                self.reiniciarModelo(es_fin_entrenamiento=False)
-
-        # Consolidación final de conocimiento
-        print("\nEntrenamiento de calidad completado. Consolidando conocimiento final por tipo...")
-        tablasQPorTipo = self.consolidarTablasPorTipo()
-        print("Tablas Q resultantes =", tablasQPorTipo)
+            # Reinicio intermedio del modelo
+            if episodio < self.episodiosEntrenamiento - 1:
+                self.decaimientoEpsilon()
+                self.reiniciarModeloEntrenamiento(finalEntrenamiento=False)
 
         # Restauramos el recolector de datos antes del reinicio final
-        self.datacollector = data_collector_aux
+        self.datacollector = datacollectorAux
         
-        # Reset final (Fija el modo simulación e inyecta las tablas compartidas)
-        self.reiniciarModelo(tablasQPorTipo=tablasQPorTipo, es_fin_entrenamiento=True)
+        # Reinicio final en el que se preparan los agentes con los datos de la ejecución
+        self.reiniciarModeloEntrenamiento(finalEntrenamiento=True)
 
 
-
+    #####Prime
     def consolidarTablasPorTipo(self):
         '''
-        Agrupa las tablas Q de todos los agentes según su tipo y calcula la media 
-        de los valores Q para cada estado y acción detectados.
-        Devuelve un diccionario: { tipo_agente: { estado_tupla: [valores_q_medios] } }
+        Agrupa las tablas Q de todos los agentes según su tipo, calculando la media de los valores Q para cada estado y acción detectados.
+        El formato de las tablas que se devuelven son: { tipoAgente: { estado: [valoresQMedios] } }
         '''
-        # Estructura temporal para acumular: { tipo: { estado: [ [val_agente1], [val_agente2] ] } }
-        acumulador = {"Trabajador": {}, "Empresario": {}, "Antisistema": {}}
-        tablas_medias = {}
+        # Estructura temporal para recopilar todos los valores Q de cada estado para cada tipo { tipo: { estado: [ [val_agente1], [val_agente2] ] } }
+        recopilador = {"Trabajador": {}, "Empresario": {}, "Antisistema": {}}
+        qTablasPorTipoMedias = {}
 
-        # 1. Agrupar todos los vectores de valores Q por tipo y estado
+        #Recorremos cada agente y agrupamos los valores de sus qTablas por tipo de agente y estado
         for agente in self.agents:
-            # Incluimos también a los agentes "Muertos" si queremos aprovechar su aprendizaje previo
+
             tipo = agente.tipo
-            if tipo not in acumulador:
+            if tipo not in recopilador:      #Controlamos posibles errores
                 continue
                 
             for estado, valores in agente.tablaQ.items():
-                if estado not in acumulador[tipo]:
-                    acumulador[tipo][estado] = []
-                acumulador[tipo][estado].append(valores)
 
-        # 2. Calcular la media para cada estado-acción
-        for tipo, estados_dict in acumulador.items():
-            tablas_medias[tipo] = {}
-            for estado, lista_valores in estados_dict.items():
-                # Convertimos a matriz de numpy para promediar las columnas (acciones) limpiamente
-                matriz_valores = np.array(lista_valores)
-                medias_acciones = np.mean(matriz_valores, axis=0)
-                tablas_medias[tipo][estado] = medias_acciones.tolist()
+                #Si este estado no ha sido aún encontrado para este tipo de agentes, lo añadimos
+                if estado not in recopilador[tipo]:
+                    recopilador[tipo][estado] = []
 
-        return tablas_medias
+                #Añadimos los qValores de este agente desde este estado
+                recopilador[tipo][estado].append(valores)
 
 
+        #Calculamos la media para cada estado-acción
+        for tipo, estadosRecopilador in recopilador.items():                        #Recorremos todos los estados de cada tipo de agente
+            qTablasPorTipoMedias[tipo] = {}
+
+            #Para cada estado, recorremos su lista que contiene todas las Q de cada agente de ese tipo
+            for estado, listaQValores in estadosRecopilador.items():
+                
+                matrizQValores = np.array(listaQValores)
+
+                #Hacemos la media de cada acción
+                mediaPorAccion = np.mean(matrizQValores, axis=0)
+                qTablasPorTipoMedias[tipo][estado] = mediaPorAccion.tolist()
+
+        return qTablasPorTipoMedias
+
+    #####Prime
     def exportarDatosSimulacion(self):
-        '''Método para guardar los históricos recolectados por el DataCollector (Modelo y Agentes)'''
+        '''Método para guardar los datos recopilados por el DataCollector durante la simulación actual'''
+
+        #Creamos la carpeta si aún no existe
         if not os.path.exists("../resultados"):
             os.makedirs("../resultados")
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        #Guardamos la fecha en la que se ha realizado la petición de exportar los datos. Se usará para el nombre del archivo
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         
+        #Nos aseguramos de que se ha accedido en el contexto correcto a este método
         if self.datacollector:
-            # Exportamos los datos macro del modelo
+
+            #Exportamos los datos del modelo
             model_df = self.datacollector.get_model_vars_dataframe()
-            model_df.to_csv(f"../resultados/sim_{timestamp}_modelo.csv", index_label="Step")
+            model_df.to_csv(f"../resultados/simulacion{timestamp}_modelo.csv", index_label="Step")
 
-            # Exportamos el histórico de variables de los agentes
+            #Exportamos los datos de los agentes
             agent_df = self.datacollector.get_agent_vars_dataframe()
-            agent_df.to_csv(f"../resultados/sim_{timestamp}_agentes.csv")
+            agent_df.to_csv(f"../resultados/simulacion{timestamp}_agentes.csv")
 
-            print(f"Datos de la simulación exportados correctamente: simulacion_{timestamp}_*.csv")
+            print(f"\nDatos de la simulación exportados correctamente: simulacion_{timestamp}_modelo.csv y simulacion_{timestamp}_agentes.csv")
         else:
             print("ERROR: No se han podido exportar los datos porque el DataCollector no está activo.")
 
-
+    #####Prime
     def exportarPesosAgentes(self):
-        '''Método exclusivo para serializar y guardar las matrices Q de aprendizaje en formato JSON'''
+        '''Método para serializar y guardar las matrices Q de los agentes en formato JSON usando la tabla unificada'''
+
+        # Si no existe el directorio de resultados, lo creamos
         if not os.path.exists("../resultados"):
             os.makedirs("../resultados")
-            
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        pesos_por_tipo = {}
-        tipos_procesados = set()
 
-        for agente in self.agents:
-            if agente.tipo in tipos_procesados:
-                continue
-                
-            tabla_serializable = {}
-            for estado_tupla, valores in agente.tablaQ.items():
-                estado_str = ",".join(map(str, estado_tupla))
-                tabla_serializable[estado_str] = valores
-            
-            pesos_por_tipo[agente.tipo] = tabla_serializable
-            tipos_procesados.add(agente.tipo)
-            
-        archivo_path = f"../resultados/tablasQPorTipo{timestamp}.json"
-        with open(archivo_path, "w") as f:
-            json.dump(pesos_por_tipo, f, indent=4)
-            
-        print(f"Entrenamiento de los agentes correctamente guardados en: tablasQPorTipo_{timestamp}.json")
+        # Guardamos la fecha en la que se ha realizado la petición de exportar los datos
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        pathArchivo = f"../resultados/tablasQPorTipo_{timestamp}.json"
+
+        qValoresPorTipo = {}
+
+        # Iteramos sobre nuestra tabla de valores Q por tipo que ya tenemos. Iteramos para cada tipo de agente
+        for tipoAgente, tablaQEstado in self.tablasQPorTipo.items():
+
+            # Convertimos cada tupla de estado-acciones en un string para que JSON lo acepte
+            tablaSerializable = {
+                f"{estado[0]},{estado[1]},{estado[2]}": valores
+                for estado, valores in tablaQEstado.items()
+            }
+
+            # Asignamos la tabla convertida al tipo de agente correspondiente
+            qValoresPorTipo[tipoAgente] = tablaSerializable
+
+        # Guardamos todo en el archivo .json estructurado
+        with open(pathArchivo, "w") as f:
+            json.dump(qValoresPorTipo, f, indent=4)
+
+        return pathArchivo
 
 
     def importarDatos(self, nombreArchivo):
         '''
-        Lee un archivo JSON con las tablas consolidadas por tipo e inyecta 
-        la misma tabla de forma compartida a todos los agentes de dicho rol.
+        Lee un archivo JSON con las tablas consolidadas por tipo, actualiza la 
+        estructura centralizada del modelo e inyecta las Q-Tables a todos los agentes.
         '''
+        #nombreArchivo = "tablasQPorTipo_2026-05-21_171242.json"
         ruta = f"../resultados/{nombreArchivo}"
         if not os.path.exists(ruta):
             print(f"Error: El archivo {nombreArchivo} no existe en la carpeta de resultados.")
             return False
-            
+
         with open(ruta, "r") as f:
             pesos_json = json.load(f)
-            
-        tablasQPorTipo = {}
 
-        # Reconstruimos el JSON: de claves String "0,1,2" pasamos a Tuplas (0, 1, 2)
+        # Reconstruimos el JSON: de claves String "2,3,3" pasamos a Tuplas (2, 3, 3)
+        tablas_reconstruidas = {}
         for tipo, tabla_cruda in pesos_json.items():
             tabla_reconstruida = {}
             for estado_str, valores in tabla_cruda.items():
+                # Volvemos a transformar el texto "2,3,3" en la tupla original (2, 3, 3)
                 estado_tupla = tuple(map(int, estado_str.split(",")))
                 tabla_reconstruida[estado_tupla] = valores
-            tablasQPorTipo[tipo] = tabla_reconstruida
+            tablas_reconstruidas[tipo] = tabla_reconstruida
 
-        # Inyectamos la misma tabla compartida a todos los agentes vivos según su tipo
+        # CONSISTENCIA: Guardamos los datos cargados en la variable centralizada del modelo
+        self.tablasQPorTipo = tablas_reconstruidas
+
+        # Inyectamos las tablas correspondientes a todos los agentes vivos según su tipo
         for agente in self.agents:
-            if agente.tipo in tablasQPorTipo:
-                # Comparten la misma estructura de datos en memoria
-                agente.tablaQ = tablasQPorTipo[agente.tipo]
-                
-        self.modo_entrenamiento = False  # Apagamos el modo entrenamiento al cargar conocimiento
-        print(f"Pesos compartidos cargados con éxito desde {nombreArchivo}. Escalabilidad activada.")
-        return True
+            if agente.tipo in self.tablasQPorTipo:
+                # Apuntamos la tablaQ del agente directamente al diccionario centralizado en memoria
+                agente.tablaQ = self.tablasQPorTipo[agente.tipo]
+
+        self.modoEntrenamiento = False  # Apagamos el modo entrenamiento al cargar conocimiento experto
+        
+        return nombreArchivo
 
 
     def comprobarAgentesMuertos(self):
@@ -534,13 +563,12 @@ class ModeloSociedad(mesa.Model):
         #Recorremos cada agente y, si está muerto, lo guardamos
         for agente in self.agents:
 
-            if agente.estado == "Muerto":
+            if agente.estado == self.scenario.estadoMuerto:
                 agentesMuertos.append(agente)
 
 
         #Al terminar, comprobamos si la cantidad de agentes muertos es la misma que la cantidad de agentes totales
         if len(self.agents) == len(agentesMuertos):
-            print("Parando simulación: Todos los agentes han sido eliminados de la sociedad")
             self.running = False
         
 
