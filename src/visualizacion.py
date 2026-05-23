@@ -1,4 +1,5 @@
 '''
+Archivo en el que se definen todos los componentes visuales y en el que se instancian todos los valores necesarios para la ejecución de las simulaciones
 '''
 import os
 
@@ -17,7 +18,7 @@ import solara
 
 from modeloSociedad import ModeloSociedad, EscenarioSociedad
 
-# Definimos cómo se pintan los agentes
+#Definimos cómo se pintan los agentes
 def agent_portrayal(agente):
     '''Define cómo se dibuja cada agente en la simulación'''
 
@@ -106,7 +107,7 @@ def panelControl(modelo):
             #Sección de entrenamiento de agentes
             #Botón Entrenar Agentes
             with solara.Column(gap="8px"):
-                solara.Markdown("### Aprendizaje por Refuerzo")
+                solara.Markdown("###Aprendizaje por Refuerzo")
                 
                 #Acción de clickar el botón
                 def clickEntrenar():
@@ -153,7 +154,7 @@ def panelControl(modelo):
 
             #Botón de cargar los pesos de los agentes
             with solara.Column(gap="8px"):
-                solara.Markdown("### Importar Pesos Entrenados anteriormente")
+                solara.Markdown("###Importar Pesos Entrenados anteriormente")
                 
                 if not archivosPesosDisponibles:
                     solara.Markdown("¡No se han detectado archivos de pesos en ../resultados! Puede crear alguno mediante el botón de 'ENTRENAR AGENTES DESDE CERO' seguido de pulsar el de 'EXPORTAR PESOS ENTRENAMIENTO'")
@@ -184,7 +185,7 @@ def panelControl(modelo):
                     solara.Button(
                         label="Cargando pesos..." if ejecutandoImportarPesos.value else "Cargar pesos",
                         on_click=clickImportar,
-                        color="success",  # ◄ Cambiado a verde (mismo color que el de entrenar)
+                        color="success",  #◄ Cambiado a verde (mismo color que el de entrenar)
                         loading=ejecutandoImportarPesos.value,
                         disabled=ejecutandoImportarPesos.value
                     )
@@ -192,9 +193,9 @@ def panelControl(modelo):
 
             solara.Markdown("---")
 
-            # Botón para exportar los datos de la simulación actual
+            #Botón para exportar los datos de la simulación actual
             with solara.Column(gap="8px"):
-                solara.Markdown("### Exportar datos de la Simulación Actual")
+                solara.Markdown("###Exportar datos de la Simulación Actual")
                 
                 #Accion al pulsar sobre el botón
                 def clickExportarMetricas():
@@ -224,18 +225,18 @@ cantAntisistemas = escenario.cantAntisistemas
 porcentajeAleatorio = escenario.porcentajeAleatorio
 episodiosEntrenamiento = escenario.episodiosEntrenamiento
 
-#####God
+
 
 #Definimos los parámetros que se utilizarán en las simulaciones
 model_params = {
-    # Parámetros editables en la interfaz gráfica
+    #Parámetros editables en la interfaz gráfica
     "cantTrabajadores": Slider("Cantidad de Trabajadores", cantTrabajadores, 0, 1000, 10),
     "cantEmpresarios": Slider("Cantidad de Empresarios", cantEmpresarios, 0, 1000, 10),
     "cantAntisistemas": Slider("Cantidad de Antisistema", cantAntisistemas, 0, 1000, 10),
     "porcentajeAleatorio": Slider("Variabilidad Inicial", porcentajeAleatorio, 0.0, 1.0, 0.1),
     "episodiosEntrenamiento": Slider("Ciclos Entrenamiento", episodiosEntrenamiento, 10, 1000, 10),
 
-    # Parámetros fijos
+    #Parámetros fijos
     "anchuraGrid": escenario.anchuraGrid,
     "alturaGrid": escenario.alturaGrid,
     "rng": escenario.rng,
@@ -255,8 +256,10 @@ model_params = {
     "porcentajeGastosCuotidianos": escenario.porcentajeGastosCuotidianos,
     "gastosDiariosMin": escenario.gastosDiariosMin,
     "gastosDiariosMax": escenario.gastosDiariosMax,
-
     "movimientoAgente": escenario.movimientoAgente,
+    "umbralCansancio": escenario.umbralCansancio,
+    "perdidaFelicidadCansancio": escenario.perdidaFelicidadCansancio,
+
     "maxStepsEpisodio": escenario.maxStepsEpisodio,
     "alfaQ": escenario.alfaQ,
     "gammaQ": escenario.gammaQ,
@@ -264,6 +267,7 @@ model_params = {
     "epsilonMinimo": escenario.epsilonMinimo,
     "epsilonSimulacion": escenario.epsilonSimulacion,
     "porcentajeDineroRecompensa": escenario.porcentajeDineroRecompensa,
+    "recompensaMuerte": escenario.recompensaMuerte,
     "porcentajePocaEnergiaQ": escenario.porcentajePocaEnergiaQ,
     "porcentajeMediaEnergiaQ": escenario.porcentajeMediaEnergiaQ,
     "divisionPocoDinero": escenario.divisionPocoDinero,
@@ -358,7 +362,7 @@ model_params = {
 }
 
 
-# Instanciamos el modelo. Es vital para el correcto funcionamiento que el nombre de los parámetros que se pasen sea el mismo que el nombre de la variable que los recibe
+#Instanciamos el modelo. Es vital para el correcto funcionamiento que el nombre de los parámetros que se pasen sea exactamente el mismo que el nombre de la variable que los recibe
 modeloSociedad = ModeloSociedad(cantTrabajadores=cantTrabajadores,cantEmpresarios=cantEmpresarios, cantAntisistemas=cantAntisistemas, episodiosEntrenamiento=episodiosEntrenamiento)
 
 #Gráficos para enseñar la evolución de estadísticas
@@ -384,7 +388,7 @@ graficoDineroMedioA = make_plot_component("Dinero Medio Antisistema", page=4, ba
 
 
 
-# Lanzamos la visualización con SolaraViz
+#Lanzamos la visualización con SolaraViz
 page = SolaraViz(
     modeloSociedad,
     model_params=model_params,
@@ -401,3 +405,5 @@ page = SolaraViz(
 
 
 page
+
+#####God

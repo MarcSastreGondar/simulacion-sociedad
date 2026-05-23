@@ -1,6 +1,6 @@
 #safr342? =?¿=?=?=! ?¿=·$"·$$?="=$~$!-.   Documento para la lógica principal de la simulación. Incluye todos los 
-# parámetros configurables y la instanciación de prácticamente todo lo que se tenga que usar y
-# y los métodos que calculen y modifiquen cosas generales del programa. Básicamente el documento main.
+#parámetros configurables y la instanciación de prácticamente todo lo que se tenga que usar y
+#y los métodos que calculen y modifiquen cosas generales del programa. Básicamente el documento main.
 '''
 gashfd
 '''
@@ -18,7 +18,7 @@ from mesa.time import Schedule
 import pandas as pd
 import numpy as np  #Para el data collector
 
-# Imports de los agentes
+#Imports de los agentes
 from agentes.trabajador import Trabajador
 from agentes.empresario import Empresario
 from agentes.antisistema import Antisistema
@@ -35,7 +35,7 @@ class EscenarioSociedad(Scenario):
     #Generador de números pseudoaleatorios para poder repetir resultados en las ejecuciones
     rng: int = 150
 
-    # Parámetros de configuración de los agentes en general
+    #Parámetros de configuración de los agentes en general
 
     #Estados posibles
     estadoFeliz: str = "Feliz"
@@ -67,9 +67,12 @@ class EscenarioSociedad(Scenario):
     visionAgente: int = 3           #Distancia a la que los agentes pueden ver, en todas direcciones
     movimientoAgente: int = 2       #Distancia a la que se pueden, como máximo, mover los agentes, en todas direcciones
 
+    umbralCansancio: int = 30               #A partir de menos de qué cantidad de energía se considera al agente como cansado
+    perdidaFelicidadCansancio: int = -1     #Cantidad de felicidad que pierde el agente en caso de realizar una acción que no le guste cansado
+
     #Relacionados con el Entrenamiento de los agentes y el Q-Learning
-    episodiosEntrenamiento: int = 30       #Cantidad de simulaciones enteras que deben realizarse para entrenar a los agentes
-    maxStepsEpisodio: int = 25       #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
+    episodiosEntrenamiento: int = 50       #Cantidad de simulaciones enteras que deben realizarse para entrenar a los agentes
+    maxStepsEpisodio: int = 500       #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
     
     alfaQ: float = 0.1
     gammaQ: float = 0.9
@@ -80,6 +83,7 @@ class EscenarioSociedad(Scenario):
 
     porcentajeDineroRecompensa: float = 0.05    #Qué porcentaje del dinero perdido se resta a la recompensa obtenida
 
+    recompensaMuerte: float = -100.0
 
     porcentajePocaEnergiaQ: float = 0.33        #Poca energía si energiaAgente < energiaMax * porcentajePocaEnergiaQ
     porcentajeMediaEnergiaQ: float = 0.66       #Media energía si energiaAgente < energiaMax * porcentajeMediaEnergiaQ
@@ -95,7 +99,7 @@ class EscenarioSociedad(Scenario):
     gastosDiariosMin: int = -10                 #Dinero que se gasta cada día en cosas cuotidianas
     gastosDiariosMax: int = -30
 
-    # Parámetros de configuración de agentes específicos y modificaciones temporales de sus recursos
+    #Parámetros de configuración de agentes específicos y modificaciones temporales de sus recursos
     #Trabajador
     dineroInicialT: int = 500
     felicidadInicialT: float = 85
@@ -242,7 +246,7 @@ class ModeloSociedad(mesa.Model):
         escenario = EscenarioSociedad()        
 
         #En caso de ser necesario, actualizamos los parámetros del escenario antes de crear el modelo
-        # Si los agentes no caben bien dentro de las casillas, aumentamos la cantidad de casillas
+        #Si los agentes no caben bien dentro de las casillas, aumentamos la cantidad de casillas
         totalAgentes = cantTrabajadores + cantEmpresarios + cantAntisistemas
         auxTotalAgentes = 2.5 * totalAgentes                                                             #Para que quepan mejor y puedan moverse
 
@@ -254,17 +258,17 @@ class ModeloSociedad(mesa.Model):
     
         super().__init__(scenario=escenario)
 
-        self.modoEntrenamiento = False  # Si es True, entrenamiento (actualiza la matriz Q). Si es False, es una simulación con lo que ya se sabe
+        self.modoEntrenamiento = False  #Si es True, entrenamiento (actualiza la matriz Q). Si es False, es una simulación con lo que ya se sabe
         self.episodiosEntrenamiento = episodiosEntrenamiento
 
         self.cantTrabajadores = cantTrabajadores
         self.cantEmpresarios = cantEmpresarios
         self.cantAntisistemas = cantAntisistemas
 
-        # Creamos las casillas en las que pueden moverse los agentes
+        #Creamos las casillas en las que pueden moverse los agentes
         self.grid = mesa.discrete_space.OrthogonalMooreGrid((self.scenario.anchuraGrid, self.scenario.alturaGrid), torus=True, random=self.random)  #torus = True para que los bordes del mapa están conectados entre sí
         
-        # Creamos los agentes de cada tipo
+        #Creamos los agentes de cada tipo
         self.trabajadores = Trabajador.create_agents(self, cantTrabajadores)
         
         self.empresarios = Empresario.create_agents(self, cantEmpresarios)
@@ -279,22 +283,22 @@ class ModeloSociedad(mesa.Model):
         #Inicializamos el data collector para que recoja los datos durante la ejecución
         #Datos recogidos del modelo
         model_reporters={
-            # Gráficos generales
+            #Gráficos generales
             "Felicidad Media": lambda m: mediaSegura(m.agents, "felicidad"),
             "Energia Media": lambda m: mediaSegura(m.agents, "energia"),
             "Dinero Medio": lambda m: mediaSegura(m.agents, "dinero"),
 
-            # Específicos de Trabajadores con chequeo de existencia
+            #Específicos de Trabajadores con chequeo de existencia
             "Felicidad Media Trabajadores": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Trabajador"), "felicidad"),
             "Energia Media Trabajadores": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Trabajador"), "energia"),
             "Dinero Medio Trabajadores": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Trabajador"), "dinero"),
 
-            # Específicos de Empresarios
+            #Específicos de Empresarios
             "Felicidad Media Empresarios": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Empresario"), "felicidad"),
             "Energia Media Empresarios": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Empresario"), "energia"),
             "Dinero Medio Empresarios": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Empresario"), "dinero"),
 
-            # Específicos de Antisistemas
+            #Específicos de Antisistemas
             "Felicidad Media Antisistema": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Antisistema"), "felicidad"),
             "Energia Media Antisistema": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Antisistema"), "energia"),
             "Dinero Medio Antisistema": lambda m: mediaSegura(m.agents.select(lambda a: a.tipo == "Antisistema"), "dinero")
@@ -331,6 +335,7 @@ class ModeloSociedad(mesa.Model):
         )
 
         self.epsilon = self.scenario.epsilonSimulacion       #Inicializamos el valor del epsilon inicial
+        self.tablasQPorTipo = {}
 
 
     def colocarAgentes(self):
@@ -338,7 +343,7 @@ class ModeloSociedad(mesa.Model):
         for agente in self.agents:                
             agente.cell = self.grid.all_cells.select_random_cell()
 
-    #####Prime
+    
     def decaimientoEpsilon(self):
         '''Método que sirve para reducir el epsilon después de acabar cada episodio de entrenamiento'''
         self.epsilon -= self.scenario.reduccionEpsilonEpisodio
@@ -347,7 +352,7 @@ class ModeloSociedad(mesa.Model):
             self.epsilon = self.scenario.epsilonMinimo
 
 
-    #####Prime
+    
     def reiniciarModeloEntrenamiento(self, finalEntrenamiento=False):
         '''
         Método para reiniciar durante el entrenamiento. En caso de ser el final del entrenamiento, vuelve a activar el datacollector y fusiona las tablas Q en una sola (por tipo)
@@ -358,27 +363,27 @@ class ModeloSociedad(mesa.Model):
         if finalEntrenamiento:
             self.modoEntrenamiento = False
 
-            # Agrupación final del conocimiento por tipo
+            #Agrupación final del conocimiento por tipo
             self.tablasQPorTipo = self.consolidarTablasPorTipo()
 
-        # Reinicio de valores del agente
+        #Reinicio de valores del agente
         for agente in list(self.agents):
             
-            # El agente restaura sus recursos al estado por defecto
+            #El agente restaura sus recursos al estado por defecto
             agente.reiniciar(self.epsilon)      #Le asignamos el nuevo epsilon (por el decay)
             
-            # Si es el fin del entrenamiento, le asginamos la tabla Q compartida
+            #Si es el fin del entrenamiento, le asginamos la tabla Q compartida
             if finalEntrenamiento and agente.tipo in self.tablasQPorTipo:
                 agente.tablaQ = self.tablasQPorTipo[agente.tipo]
 
-        # Reposicionar a la población de forma aleatoria en el mapa
+        #Reposicionar a la población de forma aleatoria en el mapa
         self.colocarAgentes()
         
         if (finalEntrenamiento) and (self.datacollector is not None):
             self.datacollector.collect(self)
 
 
-    #####Prime
+    
     def entrenamientoAgentes(self):
         '''Ejecuta un entrenamiento completo sin gráficos'''
         
@@ -404,25 +409,25 @@ class ModeloSociedad(mesa.Model):
             if not self.running:
                 print(f"        Episodio {episodio + 1} FINALIZADO PREMATURAMENTE en el step {self.steps} por colapso social.")
 
-            # Reinicio intermedio del modelo
+            #Reinicio intermedio del modelo
             if episodio < self.episodiosEntrenamiento - 1:
                 self.decaimientoEpsilon()
                 self.reiniciarModeloEntrenamiento(finalEntrenamiento=False)
 
-        # Restauramos el recolector de datos antes del reinicio final
+        #Restauramos el recolector de datos antes del reinicio final
         self.datacollector = datacollectorAux
         
-        # Reinicio final en el que se preparan los agentes con los datos de la ejecución
+        #Reinicio final en el que se preparan los agentes con los datos de la ejecución
         self.reiniciarModeloEntrenamiento(finalEntrenamiento=True)
 
 
-    #####Prime
+    
     def consolidarTablasPorTipo(self):
         '''
         Agrupa las tablas Q de todos los agentes según su tipo, calculando la media de los valores Q para cada estado y acción detectados.
         El formato de las tablas que se devuelven son: { tipoAgente: { estado: [valoresQMedios] } }
         '''
-        # Estructura temporal para recopilar todos los valores Q de cada estado para cada tipo { tipo: { estado: [ [val_agente1], [val_agente2] ] } }
+        #Estructura temporal para recopilar todos los valores Q de cada estado para cada tipo { tipo: { estado: [ [val_agente1], [val_agente2] ] } }
         recopilador = {"Trabajador": {}, "Empresario": {}, "Antisistema": {}}
         qTablasPorTipoMedias = {}
 
@@ -458,7 +463,7 @@ class ModeloSociedad(mesa.Model):
 
         return qTablasPorTipoMedias
 
-    #####Prime
+    
     def exportarDatosSimulacion(self):
         '''Método para guardar los datos recopilados por el DataCollector durante la simulación actual'''
 
@@ -484,73 +489,72 @@ class ModeloSociedad(mesa.Model):
         else:
             print("ERROR: No se han podido exportar los datos porque el DataCollector no está activo.")
 
-    #####Prime
+    
     def exportarPesosAgentes(self):
         '''Método para serializar y guardar las matrices Q de los agentes en formato JSON usando la tabla unificada'''
 
-        # Si no existe el directorio de resultados, lo creamos
+        #Si no existe el directorio de resultados, lo creamos
         if not os.path.exists("../resultados"):
             os.makedirs("../resultados")
 
-        # Guardamos la fecha en la que se ha realizado la petición de exportar los datos
+        #Guardamos la fecha en la que se ha realizado la petición de exportar los datos
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         pathArchivo = f"../resultados/tablasQPorTipo_{timestamp}.json"
 
         qValoresPorTipo = {}
 
-        # Iteramos sobre nuestra tabla de valores Q por tipo que ya tenemos. Iteramos para cada tipo de agente
+        #Iteramos sobre nuestra tabla de valores Q por tipo que ya tenemos. Iteramos para cada tipo de agente
         for tipoAgente, tablaQEstado in self.tablasQPorTipo.items():
 
-            # Convertimos cada tupla de estado-acciones en un string para que JSON lo acepte
+            #Convertimos cada tupla de estado-acciones en un string para que JSON lo acepte
             tablaSerializable = {
                 f"{estado[0]},{estado[1]},{estado[2]}": valores
                 for estado, valores in tablaQEstado.items()
             }
 
-            # Asignamos la tabla convertida al tipo de agente correspondiente
+            #Asignamos la tabla convertida al tipo de agente correspondiente
             qValoresPorTipo[tipoAgente] = tablaSerializable
 
-        # Guardamos todo en el archivo .json estructurado
+        #Guardamos todo en el archivo .json estructurado
         with open(pathArchivo, "w") as f:
             json.dump(qValoresPorTipo, f, indent=4)
 
         return pathArchivo
 
-
+    #####Mejorar comentarios
     def importarDatos(self, nombreArchivo):
         '''
         Lee un archivo JSON con las tablas consolidadas por tipo, actualiza la 
         estructura centralizada del modelo e inyecta las Q-Tables a todos los agentes.
         '''
-        #nombreArchivo = "tablasQPorTipo_2026-05-21_171242.json"
         ruta = f"../resultados/{nombreArchivo}"
         if not os.path.exists(ruta):
             print(f"Error: El archivo {nombreArchivo} no existe en la carpeta de resultados.")
             return False
 
         with open(ruta, "r") as f:
-            pesos_json = json.load(f)
+            pesosJson = json.load(f)
 
-        # Reconstruimos el JSON: de claves String "2,3,3" pasamos a Tuplas (2, 3, 3)
-        tablas_reconstruidas = {}
-        for tipo, tabla_cruda in pesos_json.items():
-            tabla_reconstruida = {}
+        #Reconstruimos el JSON: de claves String "2,3,3" pasamos a Tuplas (2, 3, 3)
+        tablasReconstruidas = {}
+        for tipo, tabla_cruda in pesosJson.items():
+            tablaReconstruida = {}
             for estado_str, valores in tabla_cruda.items():
-                # Volvemos a transformar el texto "2,3,3" en la tupla original (2, 3, 3)
-                estado_tupla = tuple(map(int, estado_str.split(",")))
-                tabla_reconstruida[estado_tupla] = valores
-            tablas_reconstruidas[tipo] = tabla_reconstruida
+                #Volvemos a transformar el texto "2,3,3" en la tupla original (2, 3, 3)
+                estadoTupla = tuple(map(int, estado_str.split(",")))
+                tablaReconstruida[estadoTupla] = valores
+            tablasReconstruidas[tipo] = tablaReconstruida
 
-        # Guardamos los datos cargados en la variable centralizada del modelo
-        self.tablasQPorTipo = tablas_reconstruidas
+        #Guardamos los datos cargados en la variable centralizada del modelo
+        self.tablasQPorTipo = tablasReconstruidas
 
-        # Inyectamos las tablas correspondientes a todos los agentes vivos según su tipo
+        #Inyectamos las tablas correspondientes a todos los agentes vivos según su tipo
         for agente in self.agents:
             if agente.tipo in self.tablasQPorTipo:
-                # Apuntamos la tablaQ del agente directamente al diccionario centralizado en memoria
+                #Apuntamos la tablaQ del agente directamente al diccionario centralizado en memoria
                 agente.tablaQ = self.tablasQPorTipo[agente.tipo]
 
-        self.modoEntrenamiento = False  # Apagamos el modo entrenamiento al cargar conocimiento experto
+        self.modoEntrenamiento = False  #Apagamos el modo entrenamiento al cargar conocimiento experto
         
         return nombreArchivo
 
@@ -575,7 +579,7 @@ class ModeloSociedad(mesa.Model):
     
     def cambioDia(self):
         '''Método que determina si han pasado 24 horas (steps) para empezar un nuevo día. Empieza los eventos diarios propios de los agentes'''
-        
+
         if self.running:
             #Llamamos al método que se encarga de las modificaciones diarias propias de todos los agentes
             self.agents.shuffle_do("avanceDiarioGeneral")
@@ -597,7 +601,7 @@ class ModeloSociedad(mesa.Model):
         #Aseguramos de que el modelo siga activo
         if self.running:
             
-            # Ejecutamos el step() de todos los agentes en orden aleatorio.
+            #Ejecutamos el step() de todos los agentes en orden aleatorio.
             self.agents.shuffle_do("step")
 
             #Recojemos los datos de todo el modelo una vez hayan actuado los agentes

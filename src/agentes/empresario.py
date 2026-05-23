@@ -1,5 +1,5 @@
 '''
-Agente Empresario, cuyo comportamiento se basa en acumular dinero y dar trabajo a los demás
+Archivo en el que se define el comportamiento específico de todos los agentes de tipo Empresario, cuyo comportamiento se basa en acumular dinero
 '''
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
@@ -12,15 +12,16 @@ class Empresario(AgenteBase):
     def __init__(self, modelo):
         
         #Instanciamos las acciones específicas de su tipo que puede realizar
-        acciones_empresario = ["invertir", "bonificacionMonetaria"]
+        accionesEmpresario = ["invertir", "bonificacionMonetaria"]
 
-        # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
-        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialE, felicidadInicial=modelo.scenario.felicidadInicialE, accionesEspecificas=acciones_empresario)
+        #Llamamos al __init__ del agenteBase con los parámetros comunes entre todos los agentes
+        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialE, felicidadInicial=modelo.scenario.felicidadInicialE, accionesEspecificas=accionesEmpresario)
 
         self.tipo = "Empresario"
 
         self.reiniciar()            #Instanciamos los valores que pueden llegar a ser reiniciados
 
+#####God
 
     def reiniciar(self, epsilon=None):
         '''Método que instancia las variables del Empresario con el valor por defecto'''
@@ -101,14 +102,20 @@ class Empresario(AgenteBase):
     #Métodos relacionados con el flujo de los agentes
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Empresarios'''
-
-        #Cada día obtiene dinero en función de los trabajadores que tiene cerca
-        self.generacionPasivaDinero()
+        
+        #Sólo participa en el funcionamiento de la simulación si está vivo
+        if self.estado != self.scenario.estadoMuerto:
+        
+            #Cada día obtiene dinero en función de los trabajadores que tiene cerca
+            self.generacionPasivaDinero()
 
 
     def avanceSemanalEspecifico(self):
         '''Método que simula el paso de una semana a otra para los Empresarios'''
-        pass
+        
+        #Sólo participa en el funcionamiento de la simulación si está vivo
+        if self.estado != self.scenario.estadoMuerto:
+            pass
 
 
     def step(self):

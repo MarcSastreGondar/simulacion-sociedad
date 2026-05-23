@@ -1,30 +1,29 @@
-#¿?¿$"acs"   Agente que hereda de BaseAgent y representa a un trabajador, que (¡¡¡INCLUIR CÓMO SE COMPORTA!!!)
 '''
-gashfd
+Documento en el que se define el comportamiento específico de todos los agentes de tipo Trabajador, cuyo comportamiento se basa en asistir siempre al trabajo y no ser problemático
 '''
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
 from .agenteBase import AgenteBase
-import mesa
 
 from metricas import *
 
-#Agente Trabajador, cuyo comportamiento se basa en asistir siempre al trabajo y ser relativamente obediente
+
 class Trabajador(AgenteBase):
         
     
     def __init__(self, modelo):
+        
         #Instanciamos las acciones específicas de su tipo que puede realizar
-        acciones_trabajador = ["trabajar", "trabajarDoble", "teletrabajar", "estudiar"]
+        accionesTrabajador = ["trabajar", "trabajarDoble", "teletrabajar", "estudiar"]
 
-        # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
-        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialT, felicidadInicial=modelo.scenario.felicidadInicialT, accionesEspecificas=acciones_trabajador)
+        #Llamamos al __init__ del agenteBase con los parámetros comunes entre todos los agentes
+        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialT, felicidadInicial=modelo.scenario.felicidadInicialT, accionesEspecificas=accionesTrabajador)
 
         self.tipo = "Trabajador"            
                                
         self.reiniciar()    #Instanciamos el valor de sus variables
 
-
+#####God
     def reiniciar(self, epsilon=None):
         '''Método que instancia las variables del Trabajador con el valor por defecto'''
         self.reiniciarGeneral(epsilon=epsilon)
@@ -157,32 +156,38 @@ class Trabajador(AgenteBase):
     #Métodos relacionados con el flujo de los agentes
     def avanceSemanalEspecifico(self):
         '''Método que simula el paso de una semana a otra para los Trabajadores'''
-        #Reiniciamos el contador de días que pueden trabajar esta semana
-        self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
+
+        #Sólo participa en el funcionamiento de la simulación si está vivo
+        if self.estado != self.scenario.estadoMuerto:
+        
+            #Reiniciamos el contador de días que pueden trabajar esta semana
+            self.diasLaborablesPendientes = self.scenario.diasLaborablesSemanales
 
     
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Trabajadores'''
 
+        #Sólo participa en el funcionamiento de la simulación si está vivo
+        if self.estado != self.scenario.estadoMuerto:
 
-        #Si aún le quedan días por trabajar esta semana, el agente debe trabajar
-        if(self.diasLaborablesPendientes > 0):
-
-            #Elegimos qué jornada laboral va a tener. En caso de estar ocupado, seguirá asistiendo al trabajo igualmente (simplemente se añadirán más horas a su contador)
-            opcion = self.aleat.integers(0,3)    ##########
-            ##########
-            trabajado = False
-            if opcion == 0:
-                trabajado = self.trabajar()
-            elif opcion == 1:
-                trabajado = self.trabajarDoble()
-            elif opcion == 2:
-                trabajado = self.teletrabajar()
-
-            if not trabajado:
-                self.trabajar(obligatorio=True)
+            #Si aún le quedan días por trabajar esta semana, el agente debe trabajar
+            if(self.diasLaborablesPendientes > 0):
             
-            self.diasLaborablesPendientes -= 1      #Restamos en 1 la cantidad de días que puede trabajar el agente esta semana
+                #Elegimos qué jornada laboral va a tener. En caso de estar ocupado, seguirá asistiendo al trabajo igualmente (simplemente se añadirán más horas a su contador)
+                opcion = self.aleat.integers(0,3)    ##########
+                ##########
+                trabajado = False
+                if opcion == 0:
+                    trabajado = self.trabajar()
+                elif opcion == 1:
+                    trabajado = self.trabajarDoble()
+                elif opcion == 2:
+                    trabajado = self.teletrabajar()
+    
+                if not trabajado:
+                    self.trabajar(obligatorio=True)
+                
+                self.diasLaborablesPendientes -= 1      #Restamos en 1 la cantidad de días que puede trabajar el agente esta semana
 
 
     def step(self):

@@ -1,27 +1,27 @@
-#¿?¿$"acs"   Agente que hereda de BaseAgent y representa a un rebelde, que (¡¡¡INCLUIR CÓMO SE COMPORTA!!!)
 '''
-gashfd
+Archivo en el que se define el comportamiento específico de todos los agentes de tipo Empresario, cuyo comportamiento se basa en no querer trabajar y en aprovecharse y molestar a los demás
 '''
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
 from .agenteBase import AgenteBase
 
 
-#Agente Antisistema, cuyo comportamiento se basa en no querer trabajar, aprovecharse de los demás y intentar causar revueltas
 class Antisistema(AgenteBase):
         
     
     def __init__(self, modelo):
+
         #Instanciamos las acciones específicas de su tipo que puede realizar
         acciones_antisistema = ["atracar", "quejarse", "vandalismo"]
 
-        # Llamamos al __init__ de BaseAgent con los parámetros comunes entre todos los agentes
+        #Llamamos al __init__ del agenteBase con los parámetros comunes entre todos los agentes
         super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialA, felicidadInicial=modelo.scenario.felicidadInicialA, accionesEspecificas=acciones_antisistema)
         
         self.tipo = "Antisistema"
 
         self.reiniciar()            #Instanciamos los valores que pueden llegar a ser reiniciados
 
+#####God
 
     def reiniciar(self, epsilon=None):
         '''Método que instancia las variables del Antisistema con el valor por defecto'''
@@ -140,10 +140,17 @@ class Antisistema(AgenteBase):
     def avanceDiarioEspecifico(self):
         '''Método que simula el paso de un día a otro para los Antisistema'''
 
+        #Sólo participa en el funcionamiento de la simulación si está vivo
+        if self.estado != self.scenario.estadoMuerto:
+            pass
+
 
     def avanceSemanalEspecifico(self):
         '''Método que simula el paso de una semana a otra para los Antisistema'''
-        self.modificarOdioSocial(self.scenario.reduccionPasivaOdio)
+
+        #Sólo participa en el funcionamiento de la simulación si está vivo
+        if self.estado != self.scenario.estadoMuerto:
+            self.modificarOdioSocial(self.scenario.reduccionPasivaOdio)
 
 
     def step(self):
@@ -155,6 +162,7 @@ class Antisistema(AgenteBase):
 
             self.actualizarVecinos()
 
+            self.modificarEnergiaFelicidadDinero(felicidad=-20)     ###################
             #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
             if self.estaDisponible():            
 
