@@ -1,4 +1,3 @@
 -Cosa que no puedo arreglar: 
     ·A veces, cuando el play interval es demasiado pequeño, al pausar y, posteriormente, reanudar la ejecución, el programa algunas veces tiene problemas al actualizar variables necesarias para la ejecución
-    ·Al ejecutar los entrenamientos, no se reinician correctamente los steps. No afecta al funcionamiento del programa pero, en caso de molestar
     ·Al ejecutar los entrenamientos, no se reinician correctamente los steps. No afecta al funcionamiento del programa pero, en caso de molestar, simplemente exportar los Pesos del Entrenamiento, pulsar el botón de "Reset" y cargar los Pesos del Entrenamiento.
