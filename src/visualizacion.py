@@ -79,8 +79,9 @@ def panelControl(modelo):
     #Creamos las variables de estado que usaremos para transformar los botones para que representen visualmente que están realizando su acción
     ejecutandoEntrenamiento = solara.use_reactive(False)
     ejecutandoExportarPesos = solara.use_reactive(False)
+    ejecutandoExportarResultadosEntrenamiento = solara.use_reactive(False)
     ejecutandoImportarPesos = solara.use_reactive(False)
-    ejecutandoExportarSimulacion = solara.use_reactive(False)
+    ejecutandoExportarDatosSimulacion = solara.use_reactive(False)
 
     #Detectamos los archivos .json de la carpeta de resultados para poder importar las pesos a cargar
     rutaResultados = "../resultados"
@@ -150,6 +151,27 @@ def panelControl(modelo):
                     disabled=ejecutandoExportarPesos.value
                 )
 
+            #Botón de exportar el resultado del entrenamiento
+            with solara.Column(gap="8px"):
+
+                #Acción al pulsar el botón
+                def clickExportarResultadosEntrenamiento():
+                    ejecutandoExportarResultadosEntrenamiento.set(True)
+                    try:
+                        modelo.exportarDatosEntrenamiento()
+
+                    finally:
+                        ejecutandoExportarResultadosEntrenamiento.set(False)
+
+                #Características visuales
+                solara.Button(
+                    label="Guardando CSV's..." if ejecutandoExportarResultadosEntrenamiento.value else "Exportar Resultados Entrenamiento", 
+                    on_click=clickExportarResultadosEntrenamiento, 
+                    color="info",
+                    loading=ejecutandoExportarResultadosEntrenamiento.value,
+                    disabled=ejecutandoExportarResultadosEntrenamiento.value
+                )
+
             solara.Markdown("---")      #Añadimos visualmente una separación
 
             #Botón de cargar los pesos de los agentes
@@ -170,7 +192,7 @@ def panelControl(modelo):
                         if archivoPesosSeleccionado.value:
                             ejecutandoImportarPesos.set(True)
                             try:
-                                nombreArchivo = modelo.importarDatos(archivoPesosSeleccionado.value)
+                                nombreArchivo = modelo.importarPesosAgentes(archivoPesosSeleccionado.value)
                                 print(f"\nPesos preentrenados cargados con éxito desde {nombreArchivo}.")
 
 
@@ -185,7 +207,7 @@ def panelControl(modelo):
                     solara.Button(
                         label="Cargando pesos..." if ejecutandoImportarPesos.value else "Cargar pesos",
                         on_click=clickImportar,
-                        color="success",  #◄ Cambiado a verde (mismo color que el de entrenar)
+                        color="success",
                         loading=ejecutandoImportarPesos.value,
                         disabled=ejecutandoImportarPesos.value
                     )
@@ -198,20 +220,20 @@ def panelControl(modelo):
                 solara.Markdown("###Exportar datos de la Simulación Actual")
                 
                 #Accion al pulsar sobre el botón
-                def clickExportarMetricas():
-                    ejecutandoExportarSimulacion.set(True)
+                def clickExportarDatosSim():
+                    ejecutandoExportarDatosSimulacion.set(True)
                     try:
                         modelo.exportarDatosSimulacion()
                     finally:
-                        ejecutandoExportarSimulacion.set(False)
+                        ejecutandoExportarDatosSimulacion.set(False)
 
                 #Características visuales del botón
                 solara.Button(
-                    label="Exportando CSVs..." if ejecutandoExportarSimulacion.value else "Exportar Datos", 
-                    on_click=clickExportarMetricas, 
+                    label="Exportando CSVs..." if ejecutandoExportarDatosSimulacion.value else "Exportar Datos", 
+                    on_click=clickExportarDatosSim, 
                     color="primary",
-                    loading=ejecutandoExportarSimulacion.value,
-                    disabled=ejecutandoExportarSimulacion.value
+                    loading=ejecutandoExportarDatosSimulacion.value,
+                    disabled=ejecutandoExportarDatosSimulacion.value
                 )
 
 
@@ -272,6 +294,7 @@ model_params = {
     "porcentajeMediaEnergiaQ": escenario.porcentajeMediaEnergiaQ,
     "divisionPocoDinero": escenario.divisionPocoDinero,
     "multiplicacionMedioDinero": escenario.multiplicacionMedioDinero,
+    "disminucionRecompensaFallo": escenario.disminucionRecompensaFallo,
 
     "dineroInicialT": escenario.dineroInicialT,
     "felicidadInicialT": escenario.felicidadInicialT,
@@ -350,6 +373,7 @@ model_params = {
     "felicidadQuejarseReceptor": escenario.felicidadQuejarseReceptor,
     "energiaQuejarse": escenario.energiaQuejarse,
     "tiempoQuejarse": escenario.tiempoQuejarse,
+    "odioQuejarse": escenario.odioQuejarse,
     "felicidadVandalismo": escenario.felicidadVandalismo,
     "energiaVandalismo": escenario.energiaVandalismo,
     "dineroVandalismo": escenario.dineroVandalismo,
@@ -405,5 +429,3 @@ page = SolaraViz(
 
 
 page
-
-#####God

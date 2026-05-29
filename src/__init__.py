@@ -1,20 +1,12 @@
-'''
-Archivo para facilitar los imports del src desde el '.ipynb'.
-'''
-
-# Importamos el modelo principal
+#Importamos el modelo principal
 from .modeloSociedad import ModeloSociedad, EscenarioSociedad
 
-# Importamos los distintos tipos de agentes
+#Importamos los distintos tipos de agentes
 from .agentes.trabajador import Trabajador
 from .agentes.empresario import Empresario
 from .agentes.antisistema import Antisistema
 
-# Importamos el método para instanciar toda la visualización
-#from ..visualizacion import crear_visualizacion
-
-
-# En caso de querer exportar todo
+#En caso de querer exportar todo
 __all__ = [
     'ModeloSociedad',
     'EscenarioSociedad',

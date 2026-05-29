@@ -1,11 +1,4 @@
--Al ejecutar los entrenamientos, no se reinician correctamente los steps (al acabar el entrenamiento debería reiniciarse completamente la ejecución, volviendo al step 0 con el único cambio siendo que los agentes ahora tienen datos en la tabla Q).
-
--Comprobar casos extremos como pulsar botones en medio de una simulación o cosas así
-
--Que cuando hagan cosas cansados, que pierdan felicidad
-
--Pensar qué hacer con lo del trabajo diario random.
-
-
-
--Cosa que no puedo arreglar: A veces, cuando el play interval es demasiado pequeño, al pausar y, posteriormente, reanudar la ejecución, el programa algunas veces tiene problemas al actualizar variables necesarias para la ejecución
+-Cosa que no puedo arreglar: 
+    ·A veces, cuando el play interval es demasiado pequeño, al pausar y, posteriormente, reanudar la ejecución, el programa algunas veces tiene problemas al actualizar variables necesarias para la ejecución
+    ·Al ejecutar los entrenamientos, no se reinician correctamente los steps. No afecta al funcionamiento del programa pero, en caso de molestar
+    ·Al ejecutar los entrenamientos, no se reinician correctamente los steps. No afecta al funcionamiento del programa pero, en caso de molestar, simplemente exportar los Pesos del Entrenamiento, pulsar el botón de "Reset" y cargar los Pesos del Entrenamiento.

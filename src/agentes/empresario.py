@@ -19,13 +19,13 @@ class Empresario(AgenteBase):
 
         self.tipo = "Empresario"
 
-        self.reiniciar()            #Instanciamos los valores que pueden llegar a ser reiniciados
+        self.reiniciarAgente()            #Instanciamos los valores que pueden llegar a ser reiniciados
 
-#####God
 
-    def reiniciar(self, epsilon=None):
-        '''Método que instancia las variables del Empresario con el valor por defecto'''
-        self.reiniciarGeneral(epsilon=epsilon)
+
+    def reiniciarAgente(self, epsilon=None):
+        '''Método que instancia las variables del Empresario con el valor por defecto, importante que el __init__ lo llame'''
+        self.reiniciarAgenteGeneral(epsilon=epsilon)
 
 
     #Métodos auxiliares
@@ -52,12 +52,13 @@ class Empresario(AgenteBase):
 
     #Acciones que sólo pueden realizar los Empresarios
     def invertir(self):
-        '''Método con el que el Empresario invierte y gana un porcentaje de su dinero'''
+        '''Acción en la que el Empresario invierte y gana un porcentaje de su dinero'''
 
         #Si tiene el tiempo y la energía para invertir, lo hace
         if self.comprobarTiempoEnergiaFelicidadDinero(tiempo=self.scenario.tiempoInvertir, energia=self.scenario.energiaInvertir):
 
-            aumentoDinero = self.scenario.porcentajeDineroInvertir * self.dinero        #El dinero que consigue dependrá del dinero que ya tenga el Empresario
+            aumentoDinero = self.scenario.porcentajeDineroInvertir * self.dinero        #El dinero que consigue dependerá del dinero que ya tenga el Empresario
+
             self.modificarEnergiaFelicidadDinero(felicidad=self.scenario.felicidadInvertir, energia=self.scenario.energiaInvertir, dinero=aumentoDinero)
             self.ocupar(self.scenario.tiempoInvertir)
 
@@ -67,7 +68,7 @@ class Empresario(AgenteBase):
 
 
     def bonificacionMonetaria(self):
-        '''Método en el que un Empresario da una bonificación monetaria a los Trabajadores cercanos para ponelos de mejor humor. O les paga a todos o a ninguno'''
+        '''Acción en la que un Empresario da una bonificación monetaria a los Trabajadores cercanos para ponelos de mejor humor. O les paga a todos o a ninguno'''
 
         trabajadoresBeneficiados = []
 
@@ -85,8 +86,9 @@ class Empresario(AgenteBase):
             dineroTotalGastar = (-1) * cantTrabajadores * self.scenario.dineroPorTrabajadorBonificacion     #Por -1 porque representa un gasto
 
             if self.comprobarTiempoEnergiaFelicidadDinero(dinero=dineroTotalGastar):
+
                 #En caso de tener dinero suficiente, el empresario lo gasta en bonificarles
-                self.modificarEnergiaFelicidadDinero(dinero=dineroTotalGastar)      #El empresario usa el dinero y el tiempo
+                self.modificarEnergiaFelicidadDinero(dinero=dineroTotalGastar)
                 self.ocupar(self.scenario.tiempoBonificacion)
 
                 #Recorremos cada agente para darles el dinero a cada uno
@@ -122,13 +124,14 @@ class Empresario(AgenteBase):
 
         #Sólo participa en el funcionamiento del modelo si está vivo
         if self.estado != self.scenario.estadoMuerto:
+
             self.actualizarVecinos()
     
             #Si el agente no está realizando ninguna otra acción, puede decidir qué hacer
             if self.estaDisponible():            
             
-                self.move()
                 self.elegirAccion()
+                self.move()
     
             else:
                 #Si el agente está ocupado, simplemente permanece inactivo durante esta hora
