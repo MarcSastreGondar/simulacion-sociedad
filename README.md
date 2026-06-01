@@ -14,10 +14,10 @@ Todos los comandos necesarios para crear y configurar el entorno virtual, el cua
 python -m venv venv
 
 2. Activar el entorno virtual:
-#Windows:
+·Windows:
 venv\Scripts\activate
 
-#Linux / macOS:
+·Linux / macOS:
 source venv/bin/activate
 
 3. Actualizar pip a la versión más reciente:
