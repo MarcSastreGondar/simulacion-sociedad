@@ -72,8 +72,8 @@ class EscenarioSociedad(Scenario):
     perdidaFelicidadCansancio: int = -1     #Cantidad de felicidad que pierde el agente en caso de realizar una acción que no le guste cansado
 
     #Relacionados con el Entrenamiento de los agentes y el Q-Learning
-    episodiosEntrenamiento: int = 25        #Cantidad de simulaciones enteras que deben realizarse para entrenar a los agentes
-    maxStepsEpisodio: int = 50              #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
+    episodiosEntrenamiento: int = 200        #Cantidad de simulaciones enteras que deben realizarse para entrenar a los agentes
+    maxStepsEpisodio: int = 3000              #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
     
     alfaQ: float = 0.1
     gammaQ: float = 0.9
@@ -243,7 +243,7 @@ class EscenarioSociedad(Scenario):
 class ModeloSociedad(mesa.Model):
     '''Modelo principal de la Simulación de la Sociedad'''
     
-    def __init__(self, cantTrabajadores=10, cantEmpresarios=5, cantAntisistemas=5, episodiosEntrenamiento=10):
+    def __init__(self, cantTrabajadores=10, cantEmpresarios=5, cantAntisistemas=5, episodiosEntrenamiento=20, maxStepsEpisodio=500):
         
         #Instanciamos el escenario con los parámetros que se utilizarán para configurar la simulación
         escenario = EscenarioSociedad()        
@@ -262,6 +262,7 @@ class ModeloSociedad(mesa.Model):
         self.modoEntrenamiento = False                  #Si es True, se entrena y se actualiza la matriz Q. Si es False, hace la simulación con lo que ya sabe
 
         self.episodiosEntrenamiento = episodiosEntrenamiento
+        self.maxStepsEpisodio = maxStepsEpisodio
 
 
         self.cantTrabajadores = cantTrabajadores
@@ -495,7 +496,7 @@ class ModeloSociedad(mesa.Model):
         #Creamos un historial para guardar las métricas de rendimiento del entrenamiento y lo inicializamos
         self.historialRecompensas, self.historialFallos = self.inicializarHistorialEntrenamiento()
 
-
+    
         #Ahora ya podemos empezar con el entrenamiento
         for episodio in range(self.episodiosEntrenamiento):
 
@@ -504,11 +505,11 @@ class ModeloSociedad(mesa.Model):
             self.steps = 0
 
             #Cada 10 steps indicamos el progreso del entrenamiento en la terminal
-            if (((episodio + 1) % 10) == 0) or ((episodio + 1) == self.episodiosEntrenamiento):
+            if (((episodio + 1) % 25) == 0) or ((episodio + 1) == self.episodiosEntrenamiento):
                 print(f"    Ejecutando episodio {episodio + 1}/{self.episodiosEntrenamiento}...")
 
             #Hacemos una simulación de la sociedad completa, haciendo steps hasta llegar al máximo por episodio o hasta llegar al colapso social
-            while (self.running) and (self.steps < self.scenario.maxStepsEpisodio):
+            while (self.running) and (self.steps < self.maxStepsEpisodio):
                 self.step()
 
             #Si el episodio ha acabado prematuramente por la muerte de todos los agentes, lo comunicamos

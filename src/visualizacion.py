@@ -246,6 +246,7 @@ cantEmpresarios = escenario.cantEmpresarios
 cantAntisistemas = escenario.cantAntisistemas
 porcentajeAleatorio = escenario.porcentajeAleatorio
 episodiosEntrenamiento = escenario.episodiosEntrenamiento
+maxStepsEpisodio = escenario.maxStepsEpisodio
 
 
 
@@ -256,7 +257,8 @@ model_params = {
     "cantEmpresarios": Slider("Cantidad de Empresarios", cantEmpresarios, 0, 1000, 10),
     "cantAntisistemas": Slider("Cantidad de Antisistema", cantAntisistemas, 0, 1000, 10),
     "porcentajeAleatorio": Slider("Variabilidad Inicial", porcentajeAleatorio, 0.0, 1.0, 0.1),
-    "episodiosEntrenamiento": Slider("Ciclos Entrenamiento", episodiosEntrenamiento, 10, 1000, 10),
+    "episodiosEntrenamiento": Slider("Ciclos Entrenamiento", episodiosEntrenamiento, 25, 2500, 25),
+    "maxStepsEpisodio": Slider("Max Steps Episodio", maxStepsEpisodio, 100, 10000, 250),
 
     #Parámetros fijos
     "anchuraGrid": escenario.anchuraGrid,
@@ -282,7 +284,6 @@ model_params = {
     "umbralCansancio": escenario.umbralCansancio,
     "perdidaFelicidadCansancio": escenario.perdidaFelicidadCansancio,
 
-    "maxStepsEpisodio": escenario.maxStepsEpisodio,
     "alfaQ": escenario.alfaQ,
     "gammaQ": escenario.gammaQ,
     "epsilonQ": escenario.epsilonQ,
@@ -387,7 +388,7 @@ model_params = {
 
 
 #Instanciamos el modelo. Es vital para el correcto funcionamiento que el nombre de los parámetros que se pasen sea exactamente el mismo que el nombre de la variable que los recibe
-modeloSociedad = ModeloSociedad(cantTrabajadores=cantTrabajadores,cantEmpresarios=cantEmpresarios, cantAntisistemas=cantAntisistemas, episodiosEntrenamiento=episodiosEntrenamiento)
+modeloSociedad = ModeloSociedad(cantTrabajadores=cantTrabajadores,cantEmpresarios=cantEmpresarios, cantAntisistemas=cantAntisistemas, episodiosEntrenamiento=episodiosEntrenamiento, maxStepsEpisodio=maxStepsEpisodio)
 
 #Gráficos para enseñar la evolución de estadísticas
 #Gráficos generales
