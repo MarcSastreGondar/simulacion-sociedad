@@ -12,10 +12,10 @@ class Antisistema(AgenteBase):
     def __init__(self, modelo):
 
         #Instanciamos las acciones específicas de su tipo que puede realizar
-        acciones_antisistema = ["atracar", "quejarse", "vandalismo"]
+        accionesAntisistema = ["atracar", "quejarse", "vandalismo"]
 
         #Llamamos al __init__ del agenteBase con los parámetros comunes entre todos los agentes
-        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialA, felicidadInicial=modelo.scenario.felicidadInicialA, accionesEspecificas=acciones_antisistema)
+        super().__init__(modelo=modelo, dineroInicial=modelo.scenario.dineroInicialA, felicidadInicial=modelo.scenario.felicidadInicialA, accionesEspecificas=accionesAntisistema)
         
         self.tipo = "Antisistema"
 
@@ -90,9 +90,9 @@ class Antisistema(AgenteBase):
                 self.ocupar(self.scenario.tiempoAtracar)
                 self.modificarOdioSocial(self.scenario.odioAtracar)     #Obtiene odio por ello
 
-                return True
+            return True     #Si tenía recursos suficientes como para atracar a gente, devolvemos True independientemente de si ha podido hacerlo o no
 
-        #Si no se ha podido atracar a nadie, se devuelve False
+        #Si no tiene recursos para atracar a alguien, devolvemos False
         return False
 
     
@@ -110,6 +110,10 @@ class Antisistema(AgenteBase):
             self.ocupar(self.scenario.tiempoQuejarse)
             self.modificarOdioSocial(self.scenario.odioQuejarse)        #Obtiene odio por ello
 
+            return True
+        
+        return False    #Si no tiene recursos para quejarse, devolvemos False
+
 
     def vandalismo(self):
         '''Acción de romper, pintar o ensuciar propiedades de Empresarios con el fin de tener un impacto negativo sobre estos'''
@@ -118,6 +122,11 @@ class Antisistema(AgenteBase):
         empresariosVandalizados = self.modificarVecinos(tipo="Empresario")
         cantEmpresarios = len(empresariosVandalizados)
 
+        #Si no tiene ningún empresario cerca, devolvemos True
+        if cantEmpresarios == 0:
+            return True
+        
+        
         while cantEmpresarios > 0:
 
             #Calculamos los recursos necesarios para vandalizar a esta cantidad de empresarios
@@ -169,6 +178,9 @@ class Antisistema(AgenteBase):
 
             #Comprobamos si el agente es demasiado odiado y debe ser expulsado de la sociedad
             self.comprobarOdioSocial()
+
+            if self.estado == self.scenario.estadoMuerto:       #Si ha tenido que ser expulsado de la sociedad, no realiza ninguna acción
+                return
 
             self.actualizarVecinos()
 

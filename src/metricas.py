@@ -2,7 +2,6 @@
 Archivo con las funciones para realizar cálculos de distintos tipos
 '''
 import numpy as np
-import pandas as pd
 
 
 def redondearDecimalMedio(valor: float) -> float:

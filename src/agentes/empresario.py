@@ -95,10 +95,12 @@ class Empresario(AgenteBase):
                 for agente in trabajadoresBeneficiados:
                     agente.modificarEnergiaFelicidadDinero(felicidad=agente.scenario.aumentoFelicidadTrabajadorBonificacion, dinero=agente.scenario.dineroPorTrabajadorBonificacion)
                     
-                return True
+            else:
+                #Si el Empresario no tiene recursos suficientes, devolvemos False
+                return False
         
-        #Si no se han encontrado trabajadores que cumplan las condiciones o el Empresario no tiene dinero suficiente, devolvemos False
-        return False
+        #En caso de haber realizado la bonificación monetaria o de no haber Trabajadores cerca, devolvemos True
+        return True
 
 
     #Métodos relacionados con el flujo de los agentes

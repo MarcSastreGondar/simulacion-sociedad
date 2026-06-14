@@ -55,9 +55,9 @@ class EscenarioSociedad(Scenario):
     felicidadMax: float = 100.0
 
     #Cantidad de cada tipo de agente
-    cantTrabajadores: int = 5               #Cantidad de trabajadores
-    cantEmpresarios: int = 5                #Cantidad de empresarios
-    cantAntisistemas: int = 5               #Cantidad de agentes antisistema
+    cantTrabajadores: int = 120               #Cantidad de trabajadores
+    cantEmpresarios: int = 20                #Cantidad de empresarios
+    cantAntisistemas: int = 20               #Cantidad de agentes antisistema
 
     porcentajeAleatorio: float = 0.25
 
@@ -72,20 +72,20 @@ class EscenarioSociedad(Scenario):
     perdidaFelicidadCansancio: int = -1     #Cantidad de felicidad que pierde el agente en caso de realizar una acción que no le guste cansado
 
     #Relacionados con el Entrenamiento de los agentes y el Q-Learning
-    episodiosEntrenamiento: int = 200        #Cantidad de simulaciones enteras que deben realizarse para entrenar a los agentes
-    maxStepsEpisodio: int = 3000              #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
+    episodiosEntrenamiento: int = 400        #Cantidad de simulaciones enteras que deben realizarse para entrenar a los agentes
+    maxStepsEpisodio: int = 8000              #Cantidad máxima de steps que puede haber en 1 sólo ciclo de entrenamiento
     
     alfaQ: float = 0.1
-    gammaQ: float = 0.9
+    gammaQ: float = 0.95
     epsilonQ: float = 1.0
-    reduccionEpsilonEpisodio: float = 0.05      #Cantidad que se reduce el Epsilon en cada ciclo completo de entrenamiento
-    epsilonMinimo: float = 0.02                 #Siempre un 2% de probabilidades de realizar una acción aleatoria
+    reduccionEpsilonEpisodio: float = 0.005      #Cantidad que se reduce el Epsilon en cada ciclo completo de entrenamiento
+    epsilonMinimo: float = 0.005                 #Siempre un 0,5% de probabilidades de realizar una acción aleatoria
     epsilonSimulacion: float = 0.005            #Probabilidad de explorar en una simulación real. 0,5%
-    disminucionRecompensaFallo: float = -1      #Cantidad en la que se reduce el Q valor en caso de que el agente intente realizar la acción pero no acabe pudiendo
+    cambioRecompensaFallo: float = -5.0           #Cantidad en la que se reduce el Q valor en caso de que el agente intente realizar la acción pero acabe no pudiendo
 
-    porcentajeDineroRecompensa: float = 0.05    #Qué porcentaje del dinero perdido se resta a la recompensa obtenida
+    porcentajeDineroRecompensa: float = 0.01    #Qué porcentaje del dinero perdido se resta a la recompensa obtenida, 1%
 
-    recompensaMuerte: float = -100.0
+    recompensaMuerte: float = -5000.0
 
     porcentajePocaEnergiaQ: float = 0.33        #Poca energía si energiaAgente < energiaMax * porcentajePocaEnergiaQ
     porcentajeMediaEnergiaQ: float = 0.66       #Media energía si energiaAgente < energiaMax * porcentajeMediaEnergiaQ
@@ -505,7 +505,7 @@ class ModeloSociedad(mesa.Model):
             self.steps = 0
 
             #Cada 10 steps indicamos el progreso del entrenamiento en la terminal
-            if (((episodio + 1) % 25) == 0) or ((episodio + 1) == self.episodiosEntrenamiento):
+            if (((episodio + 1) % 10) == 0) or ((episodio + 1) == self.episodiosEntrenamiento):
                 print(f"    Ejecutando episodio {episodio + 1}/{self.episodiosEntrenamiento}...")
 
             #Hacemos una simulación de la sociedad completa, haciendo steps hasta llegar al máximo por episodio o hasta llegar al colapso social

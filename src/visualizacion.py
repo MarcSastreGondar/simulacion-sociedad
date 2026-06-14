@@ -295,7 +295,7 @@ model_params = {
     "porcentajeMediaEnergiaQ": escenario.porcentajeMediaEnergiaQ,
     "divisionPocoDinero": escenario.divisionPocoDinero,
     "multiplicacionMedioDinero": escenario.multiplicacionMedioDinero,
-    "disminucionRecompensaFallo": escenario.disminucionRecompensaFallo,
+    "cambioRecompensaFallo": escenario.cambioRecompensaFallo,
 
     "dineroInicialT": escenario.dineroInicialT,
     "felicidadInicialT": escenario.felicidadInicialT,
