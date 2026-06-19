@@ -80,7 +80,7 @@ class EscenarioSociedad(Scenario):
     epsilonQ: float = 1.0
     reduccionEpsilonEpisodio: float = 0.005      #Cantidad que se reduce el Epsilon en cada ciclo completo de entrenamiento
     epsilonMinimo: float = 0.005                 #Siempre un 0,5% de probabilidades de realizar una acción aleatoria
-    epsilonSimulacion: float = 0.005            #Probabilidad de explorar en una simulación real. 0,5%
+    epsilonSimulacion: float = 0.0025            #Probabilidad de explorar en una simulación real. 0,5%
     cambioRecompensaFallo: float = -5.0           #Cantidad en la que se reduce el Q valor en caso de que el agente intente realizar la acción pero acabe no pudiendo
 
     porcentajeDineroRecompensa: float = 0.01    #Qué porcentaje del dinero perdido se resta a la recompensa obtenida, 1%
@@ -196,7 +196,8 @@ class EscenarioSociedad(Scenario):
 
     #Bonificación Monetaria
     umbralFelicidadBonificacionMonetaria: float = 50        #Dar recompensas monetarias sólo a los Trabajadores que tengan menos de una cierta cantidad de felicidad
-    dineroPorTrabajadorBonificacion: int = 100              #Cantidad de dinero que pierde el Empresario por cada Trabajador (y la que gana cada Empresario)
+    maxTrabajadoresBonificacion: int = 5                    #Cantidad
+    dineroPorTrabajadorBonificacion: int = 100              #Cantidad de dinero que pierde el Empresario por cada Trabajador (y la que gana cada Trabajador)
     aumentoFelicidadTrabajadorBonificacion: float = 10      #Lo que aumenta la felicidad de cada Trabajador
     tiempoBonificacion: float = 1.0                         #1 hora
 

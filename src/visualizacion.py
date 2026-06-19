@@ -357,6 +357,7 @@ model_params = {
     "felicidadInvertir": escenario.felicidadInvertir,
     "porcentajeDineroInvertir": escenario.porcentajeDineroInvertir,
     "umbralFelicidadBonificacionMonetaria": escenario.umbralFelicidadBonificacionMonetaria,
+    "maxTrabajadoresBonificacion": escenario.maxTrabajadoresBonificacion,
     "dineroPorTrabajadorBonificacion": escenario.dineroPorTrabajadorBonificacion,
     "aumentoFelicidadTrabajadorBonificacion": escenario.aumentoFelicidadTrabajadorBonificacion,
     "tiempoBonificacion": escenario.tiempoBonificacion,

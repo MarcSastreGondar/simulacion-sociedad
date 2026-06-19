@@ -71,7 +71,7 @@ class Empresario(AgenteBase):
         '''Acción en la que un Empresario da una bonificación monetaria a los Trabajadores cercanos para ponelos de mejor humor. O les paga a todos o a ninguno'''
 
         trabajadoresBeneficiados = []
-
+            
         #Primero comprobamos cuantos Trabajadores hay cerca que tengan menos de una cierta cantidad de felicidad
         for agente in self.vecinos:
             if (agente.tipo == "Trabajador") and (agente.felicidad < self.scenario.umbralFelicidadBonificacionMonetaria):
@@ -83,7 +83,12 @@ class Empresario(AgenteBase):
 
 
         if cantTrabajadores > 0:
-            dineroTotalGastar = (-1) * cantTrabajadores * self.scenario.dineroPorTrabajadorBonificacion     #Por -1 porque representa un gasto
+
+            #En caso de que la cantidad de Trabajadores supere el umbral máximo, bonificamos sólo a la cantidad máxima de Trabajadores
+            if(cantTrabajadores > self.scenario.maxTrabajadoresBonificacion):
+                cantTrabajadores = self.scenario.maxTrabajadoresBonificacion
+
+            dineroTotalGastar = (-1) * cantTrabajadores * self.scenario.maxTrabajadoresBonificacion     #Por -1 porque representa un gasto
 
             if self.comprobarTiempoEnergiaFelicidadDinero(dinero=dineroTotalGastar):
 
@@ -94,6 +99,11 @@ class Empresario(AgenteBase):
                 #Recorremos cada agente para darles el dinero a cada uno
                 for agente in trabajadoresBeneficiados:
                     agente.modificarEnergiaFelicidadDinero(felicidad=agente.scenario.aumentoFelicidadTrabajadorBonificacion, dinero=agente.scenario.dineroPorTrabajadorBonificacion)
+
+                    #Disminuimos el contador de Trabajadores restantes, en caso de haber acabado, salimos del bucle
+                    cantTrabajadores -= 1
+                    if cantTrabajadores <= 0:
+                        break
                     
             else:
                 #Si el Empresario no tiene recursos suficientes, devolvemos False
