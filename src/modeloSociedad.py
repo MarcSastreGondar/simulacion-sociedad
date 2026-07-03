@@ -80,7 +80,7 @@ class EscenarioSociedad(Scenario):
     epsilonQ: float = 1.0
     reduccionEpsilonEpisodio: float = 0.005      #Cantidad que se reduce el Epsilon en cada ciclo completo de entrenamiento
     epsilonMinimo: float = 0.005                 #Siempre un 0,5% de probabilidades de realizar una acción aleatoria
-    epsilonSimulacion: float = 0.0025            #Probabilidad de explorar en una simulación real. 0,5%
+    epsilonSimulacion: float = 0.0025            #Probabilidad de explorar en una simulación real. 0,25%
     cambioRecompensaFallo: float = -5.0           #Cantidad en la que se reduce el Q valor en caso de que el agente intente realizar la acción pero acabe no pudiendo
 
     porcentajeDineroRecompensa: float = 0.01    #Qué porcentaje del dinero perdido se resta a la recompensa obtenida, 1%

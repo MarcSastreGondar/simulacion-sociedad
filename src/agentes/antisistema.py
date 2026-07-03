@@ -1,5 +1,5 @@
 '''
-Archivo en el que se define el comportamiento específico de todos los agentes de tipo Empresario, cuyo comportamiento se basa en no querer trabajar y en aprovecharse y molestar a los demás
+Archivo en el que se define el comportamiento específico de todos los agentes de tipo Antisistema, cuyo comportamiento se basa en no querer trabajar y en aprovecharse y molestar a los demás
 '''
 
 #Importamos todos los métodos comunes entre los distintos tipos de agentes
